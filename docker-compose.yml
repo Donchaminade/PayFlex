@@ -1,0 +1,69 @@
+# Environnement de dev/staging reproductible pour PayFlex (backend + MySQL).
+#
+# Usage :
+#   copy .env.example .env   # puis éditer .env
+#   docker compose up --build
+#
+# Backend : http://localhost:8088  (santé : /api/mobile/health, admin : /admin)
+# MySQL   : localhost:3306 (payflexdb)
+
+services:
+  mysql:
+    image: mysql:8
+    container_name: payflex-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - payflex_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  backend:
+    build:
+      context: ./payflex_backend
+      dockerfile: Dockerfile
+    container_name: payflex-backend
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      PAYFLEX_DB_URL: ${PAYFLEX_DB_URL}
+      PAYFLEX_DB_USER: ${PAYFLEX_DB_USER}
+      PAYFLEX_DB_PASSWORD: ${PAYFLEX_DB_PASSWORD}
+      PAYFLEX_PUBLIC_URL: ${PAYFLEX_PUBLIC_URL}
+      PAYFLEX_VAULT_KEY: ${PAYFLEX_VAULT_KEY}
+      PAYFLEX_CATCHUP_ALERT_THRESHOLD: ${PAYFLEX_CATCHUP_ALERT_THRESHOLD}
+      PAYFLEX_AUTO_VALIDATE_HOURS: ${PAYFLEX_AUTO_VALIDATE_HOURS}
+      PAYFLEX_AGENT_CASH_AUTO_VALIDATE: ${PAYFLEX_AGENT_CASH_AUTO_VALIDATE}
+      PAYFLEX_LOG_DIR: ${PAYFLEX_LOG_DIR}
+      PAYFLEX_FIREBASE_CREDENTIALS: ${PAYFLEX_FIREBASE_CREDENTIALS}
+      PAYFLEX_VAPID_PUBLIC_KEY: ${PAYFLEX_VAPID_PUBLIC_KEY}
+      PAYFLEX_VAPID_PRIVATE_KEY: ${PAYFLEX_VAPID_PRIVATE_KEY}
+      PAYFLEX_VAPID_SUBJECT: ${PAYFLEX_VAPID_SUBJECT}
+      PAYDUNYA_ENABLED: ${PAYDUNYA_ENABLED}
+      PAYDUNYA_MODE: ${PAYDUNYA_MODE}
+      PAYDUNYA_MASTER_KEY: ${PAYDUNYA_MASTER_KEY}
+      PAYDUNYA_PRIVATE_KEY: ${PAYDUNYA_PRIVATE_KEY}
+      PAYDUNYA_TOKEN: ${PAYDUNYA_TOKEN}
+      PAYDUNYA_PUBLIC_KEY: ${PAYDUNYA_PUBLIC_KEY}
+    ports:
+      - "8088:8088"
+    volumes:
+      - payflex_backend_logs:/app/logs
+      - payflex_backend_uploads:/app/uploads
+
+volumes:
+  payflex_mysql_data:
+  payflex_backend_logs:
+  payflex_backend_uploads:
