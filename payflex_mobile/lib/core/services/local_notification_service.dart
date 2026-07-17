@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' show Color;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
+import 'notification_preferences_service.dart';
 
 /// Alertes système affichées par l'app après sync API (push PayFlex sans Firebase).
 class LocalNotificationService {
@@ -49,6 +50,10 @@ class LocalNotificationService {
     String? payload,
   }) async {
     if (kIsWeb) return;
+    // Réglage local « Notifications » (Profil > Notifications) : point de
+    // contrôle unique avant tout affichage, quelle que soit la source (poll
+    // PayFlex ou FCM premier plan).
+    if (!await NotificationPreferencesService.isEnabled()) return;
     if (!_initialized) await init();
     const details = NotificationDetails(
       android: AndroidNotificationDetails(

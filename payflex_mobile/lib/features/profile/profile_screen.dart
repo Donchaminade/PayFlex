@@ -8,8 +8,11 @@ import '../../core/widgets/payflex_profile_avatar.dart';
 import '../../core/network/mobile_api_service.dart';
 import '../../core/providers/auth_provider.dart';
 import '../../core/providers/ui_scale_provider.dart';
+import '../agent/agent_change_pin_screen.dart';
 import '../auth/welcome_screen.dart';
 import '../support/client_report_screen.dart';
+import 'notification_preferences_screen.dart';
+import 'privacy_policy_screen.dart';
 import 'profile_edit_screen.dart';
 import '../vitrine/job_offers_screen.dart';
 
@@ -55,6 +58,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       ),
     );
     if (err == null) await ref.read(authProvider.notifier).refreshProfile();
+  }
+
+  void _openPinChangeScreen() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const AgentChangePinScreen(isAgent: false)),
+    );
   }
 
   Future<void> _pullRefresh() async {
@@ -525,20 +534,27 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         context,
                         Icons.notifications_none_rounded,
                         'Notifications',
-                        'Préférences d\'alertes (bientôt)',
-                        () => ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Bientôt disponible.')),
+                        'Préférences d\'alertes',
+                        () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const NotificationPreferencesScreen()),
                         ),
                       ),
                       _profileItem(
                         context,
                         Icons.security_rounded,
                         'Sécurité',
-                        'Modifier le code PIN (contact support pour l\'instant)',
-                        () => ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('La modification du PIN depuis l\'app arrive bientôt. En cas d\'urgence, contactez le support PayFlex.'),
-                          ),
+                        'Modifier le code PIN',
+                        () => _openPinChangeScreen(),
+                      ),
+                      _profileItem(
+                        context,
+                        Icons.privacy_tip_outlined,
+                        'Politique de confidentialité',
+                        'Données collectées et protection de votre vie privée',
+                        () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const PrivacyPolicyScreen()),
                         ),
                       ),
                       if (auth.canReportAdhesionDispute)
