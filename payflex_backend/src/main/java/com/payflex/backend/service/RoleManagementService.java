@@ -1,5 +1,6 @@
 package com.payflex.backend.service;
 
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
@@ -288,6 +289,9 @@ public class RoleManagementService {
         return matrix;
     }
 
+    // Une modification de permission de rôle impacte tous les utilisateurs de ce rôle ;
+    // on vide tout le cache "userPermissions" plutôt que de cibler chaque userId concerné.
+    @CacheEvict(value = "userPermissions", allEntries = true)
     public void setPermissionGranted(long roleId, long permissionId, boolean granted) {
         if (roleId <= 0 || permissionId <= 0) return;
         if (granted) {
