@@ -9,8 +9,15 @@ import '../../core/services/biometric_auth_service.dart';
 import '../../core/utils/user_visible_message.dart';
 import '../../core/widgets/registration_form_theme.dart';
 
+/// Écran de changement de PIN, partagé entre agents et clients : la logique de
+/// hachage/validation du PIN côté serveur est strictement identique pour les deux rôles
+/// (colonnes `pin`/`secret_code` communes de la table `users`), seul l'endpoint diffère
+/// (`/api/mobile/agent/profile/pin` vs `/api/mobile/profile/pin`).
 class AgentChangePinScreen extends ConsumerStatefulWidget {
-  const AgentChangePinScreen({super.key});
+  const AgentChangePinScreen({super.key, this.isAgent = true});
+
+  /// `false` pour un compte client (utilise `/api/mobile/profile/pin`).
+  final bool isAgent;
 
   @override
   ConsumerState<AgentChangePinScreen> createState() => _AgentChangePinScreenState();
@@ -63,13 +70,21 @@ class _AgentChangePinScreenState extends ConsumerState<AgentChangePinScreen> {
 
     setState(() => _saving = true);
     try {
-      final res = await _api.changeAgentPin(
-        userId: auth.userId!,
-        phone: auth.phone!,
-        pin: auth.pin ?? '',
-        currentPin: current,
-        newPin: newPin,
-      );
+      final res = widget.isAgent
+          ? await _api.changeAgentPin(
+              userId: auth.userId!,
+              phone: auth.phone!,
+              pin: auth.pin ?? '',
+              currentPin: current,
+              newPin: newPin,
+            )
+          : await _api.changeClientPin(
+              userId: auth.userId!,
+              phone: auth.phone!,
+              pin: auth.pin ?? '',
+              currentPin: current,
+              newPin: newPin,
+            );
       if (!mounted) return;
       if (res == null || res['ok'] != true) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -82,7 +97,7 @@ class _AgentChangePinScreenState extends ConsumerState<AgentChangePinScreen> {
       if (!mounted) return;
       Navigator.pop(context, true);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Code PIN agent mis à jour.')),
+        const SnackBar(content: Text('Code PIN mis à jour.')),
       );
     } catch (e) {
       if (mounted) {

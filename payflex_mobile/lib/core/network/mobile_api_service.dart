@@ -1269,6 +1269,23 @@ class MobileApiService {
         extra: {'currentPin': currentPin, 'newPin': newPin},
       );
 
+  /// Changement de PIN pour un compte CLIENT (endpoint dédié `/api/mobile/profile/pin`,
+  /// distinct de `/api/mobile/agent/profile/pin` réservé aux agents).
+  Future<Map<String, dynamic>?> changeClientPin({
+    required int userId,
+    required String phone,
+    required String pin,
+    required String currentPin,
+    required String newPin,
+  }) =>
+      _agentPost(
+        '/api/mobile/profile/pin',
+        userId: userId,
+        phone: phone,
+        pin: pin,
+        extra: {'currentPin': currentPin, 'newPin': newPin},
+      );
+
   Future<Map<String, dynamic>?> fetchAgentContributionRegistry({
     required int userId,
     required String phone,
@@ -1717,6 +1734,7 @@ class MobileApiService {
     File? idDocument,
     bool idDocumentWaived = false,
     List<Map<String, dynamic>>? productSelections,
+    bool? termsAccepted,
   }) async {
     final uri = Uri.parse('${ApiConfig.baseUrl}/api/mobile/registrations');
     final req = http.MultipartRequest('POST', uri)
@@ -1757,6 +1775,9 @@ class MobileApiService {
     if (idDocumentWaived) req.fields['idDocumentWaived'] = 'true';
     if (productSelections != null && productSelections.isNotEmpty) {
       req.fields['productSelections'] = jsonEncode(productSelections);
+    }
+    if (termsAccepted != null) {
+      req.fields['termsAccepted'] = termsAccepted.toString();
     }
 
     await _attachRegistrationFile(req, 'profilePhoto', profilePhoto);
