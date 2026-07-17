@@ -1,5 +1,7 @@
 package com.payflex.backend.service;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -17,6 +19,9 @@ public class ProductCategoryService {
         this.jdbcTemplate = jdbcTemplate;
     }
 
+    // Catégories peu volatiles (modifiées seulement via create/update/delete admin, rares) mais
+    // lues à chaque écran catalogue/admin : bon candidat au cache (voir config/CacheConfig.java).
+    @Cacheable("productCategories")
     public List<AdminCrudService.ProductCategoryRow> listAll() {
         return jdbcTemplate.query(
             """
@@ -54,6 +59,7 @@ public class ProductCategoryService {
         return rows.isEmpty() ? Optional.empty() : Optional.of(rows.get(0));
     }
 
+    @CacheEvict(value = "productCategories", allEntries = true)
     public long create(String label, Integer sortOrder) {
         String lbl = normalizeLabel(label);
         String code = generateUniqueCode(lbl);
@@ -68,6 +74,7 @@ public class ProductCategoryService {
         return id == null ? 0L : id;
     }
 
+    @CacheEvict(value = "productCategories", allEntries = true)
     public void update(long id, String label, Integer sortOrder) {
         if (id <= 0) {
             throw new IllegalArgumentException("Catégorie introuvable.");
@@ -85,6 +92,7 @@ public class ProductCategoryService {
         }
     }
 
+    @CacheEvict(value = "productCategories", allEntries = true)
     public void delete(long id) {
         if (id <= 0) {
             throw new IllegalArgumentException("Catégorie introuvable.");

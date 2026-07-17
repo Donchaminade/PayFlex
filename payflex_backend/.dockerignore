@@ -1,0 +1,39 @@
+# Build Maven
+target/
+
+# VCS
+.git/
+.gitignore
+
+# Secrets locaux (montés/injectés via variables d'environnement au runtime, jamais dans l'image)
+.env
+.env.*
+!.env.example
+application-local.yml
+application-local.properties
+secrets/
+*.pem
+*.key
+*firebase*service*account*.json
+*service-account*.json
+
+# Logs
+logs/
+*.log
+*.log.*
+*.log.*.gz
+*.log.*.tmp
+
+# Données runtime (jamais dans l'image, montées en volume)
+uploads/
+
+# Éditeurs / OS
+.idea/
+.vscode/
+*.iml
+.DS_Store
+
+# Scripts locaux non nécessaires à l'image
+run-local.ps1
+repair-flyway.ps1
+scripts/backup/

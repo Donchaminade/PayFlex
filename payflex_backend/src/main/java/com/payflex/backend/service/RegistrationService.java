@@ -106,13 +106,13 @@ public class RegistrationService {
               full_name, phone, city, profession, gender, submitted_by, requested_role,
               submitted_by_agent_user_id, assigned_agent_user_id, pin, secret_code, account_password, unique_code,
               workplace_name, workplace_address, boss_name, boss_phone, profile_photo_path, id_document_path,
-              id_document_waived
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+              id_document_waived, terms_accepted
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             normalized.fullName(), normalized.phone(), normalized.city(), normalized.profession(), normalized.gender(),
             normalized.submittedBy(), normalized.requestedRole(), normalized.submittedByAgentUserId(), normalized.assignedAgentUserId(),
             creds.pin(), creds.secretCode(), creds.accountPassword(), normalized.uniqueCode(), normalized.workplaceName(), normalized.workplaceAddress(),
-            normalized.bossName(), normalized.bossPhone(), photoPath, docPath, normalized.idDocumentWaived()
+            normalized.bossName(), normalized.bossPhone(), photoPath, docPath, normalized.idDocumentWaived(), normalized.termsAccepted()
         );
         Long id = jdbcTemplate.queryForObject("SELECT LAST_INSERT_ID()", Long.class);
         long savedId = id == null ? 0L : id;
@@ -268,13 +268,15 @@ public class RegistrationService {
                       pin = ?, secret_code = ?, account_password = COALESCE(account_password, ?), unique_code = ?,
                       assigned_agent_user_id = ?,
                       profile_photo_path = ?, id_document_path = ?,
-                      workplace_name = ?, workplace_address = ?, boss_name = ?, boss_phone = ?
+                      workplace_name = ?, workplace_address = ?, boss_name = ?, boss_phone = ?,
+                      terms_accepted = terms_accepted OR ?
                     WHERE id = ?
                     """,
                     row.get("full_name"), clientRoleId, row.get("city"), row.get("profession"), row.get("gender"),
                     row.get("pin"), row.get("secret_code"), row.get("account_password"), row.get("unique_code"), finalAgentId,
                     row.get("profile_photo_path"), row.get("id_document_path"),
                     row.get("workplace_name"), row.get("workplace_address"), row.get("boss_name"), row.get("boss_phone"),
+                    Boolean.TRUE.equals(row.get("terms_accepted")),
                     existingUserId
                 );
                 linkedUserId = existingUserId;
@@ -283,14 +285,16 @@ public class RegistrationService {
                 """
                 INSERT INTO users (
                       full_name, phone, role_id, city, profession, gender, status, pin, secret_code, account_password, unique_code,
-                  assigned_agent_user_id, profile_photo_path, id_document_path, workplace_name, workplace_address, boss_name, boss_phone
-                    ) VALUES (?, ?, ?, ?, ?, ?, 'valide', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                  assigned_agent_user_id, profile_photo_path, id_document_path, workplace_name, workplace_address, boss_name, boss_phone,
+                  terms_accepted
+                    ) VALUES (?, ?, ?, ?, ?, ?, 'valide', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 row.get("full_name"), row.get("phone"), clientRoleId, row.get("city"), row.get("profession"),
                 row.get("gender"),
                     row.get("pin"), row.get("secret_code"), row.get("account_password"), row.get("unique_code"),
                     finalAgentId, row.get("profile_photo_path"), row.get("id_document_path"),
-                row.get("workplace_name"), row.get("workplace_address"), row.get("boss_name"), row.get("boss_phone")
+                row.get("workplace_name"), row.get("workplace_address"), row.get("boss_name"), row.get("boss_phone"),
+                Boolean.TRUE.equals(row.get("terms_accepted"))
             );
                 Long newId = jdbcTemplate.queryForObject("SELECT LAST_INSERT_ID()", Long.class);
                 linkedUserId = newId == null ? 0L : newId;
@@ -379,7 +383,8 @@ public class RegistrationService {
             input.workplaceAddress(),
             input.bossName(),
             input.bossPhone(),
-            input.idDocumentWaived()
+            input.idDocumentWaived(),
+            input.termsAccepted()
         );
     }
 
@@ -507,7 +512,8 @@ public class RegistrationService {
             normalized.workplaceAddress(),
             normalized.bossName(),
             normalized.bossPhone(),
-            normalized.idDocumentWaived()
+            normalized.idDocumentWaived(),
+            normalized.termsAccepted()
         );
     }
 
@@ -605,7 +611,13 @@ public class RegistrationService {
         String workplaceAddress,
         String bossName,
         String bossPhone,
-        boolean idDocumentWaived
+        boolean idDocumentWaived,
+        /**
+         * RGPD — consentement CGU/confidentialité transmis par le formulaire mobile. {@code true}
+         * uniquement si explicitement coché ET transmis ; {@code false} sinon (y compris pour les
+         * clients mobile pas encore mis à jour pour envoyer ce champ — voir MobileApiController).
+         */
+        boolean termsAccepted
     ) {}
 
     public record RegistrationRow(
@@ -909,13 +921,15 @@ public class RegistrationService {
                   full_name = ?, email = ?, role_id = ?, city = ?, profession = ?, gender = ?, status = 'valide',
                   pin = ?, secret_code = ?, account_password = ?, unique_code = ?, assigned_agent_user_id = ?,
                   profile_photo_path = ?, id_document_path = ?,
-                  workplace_name = ?, workplace_address = ?, boss_name = ?, boss_phone = ?
+                  workplace_name = ?, workplace_address = ?, boss_name = ?, boss_phone = ?,
+                  terms_accepted = terms_accepted OR ?
                 WHERE id = ?
                 """,
                 input.fullName(), UserContactUniquenessService.normalizeEmail(input.email()), clientRoleId,
                 input.city(), input.profession(), input.gender(),
                 creds.pin(), creds.secretCode(), creds.accountPassword(), input.uniqueCode(), input.assignedAgentUserId(),
                 photoPath, docPath, input.workplaceName(), input.workplaceAddress(), input.bossName(), input.bossPhone(),
+                input.termsAccepted(),
                 existingUserId
             );
             credentialVaultService.storeForUser(existingUserId, input.pin(), input.accountPassword());
@@ -925,13 +939,15 @@ public class RegistrationService {
             """
             INSERT INTO users (
               full_name, phone, email, role_id, city, profession, gender, status, pin, secret_code, account_password, unique_code,
-              assigned_agent_user_id, profile_photo_path, id_document_path, workplace_name, workplace_address, boss_name, boss_phone
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, 'valide', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+              assigned_agent_user_id, profile_photo_path, id_document_path, workplace_name, workplace_address, boss_name, boss_phone,
+              terms_accepted
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, 'valide', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             input.fullName(), input.phone(), UserContactUniquenessService.normalizeEmail(input.email()), clientRoleId,
             input.city(), input.profession(), input.gender(),
             creds.pin(), creds.secretCode(), creds.accountPassword(), input.uniqueCode(), input.assignedAgentUserId(),
-            photoPath, docPath, input.workplaceName(), input.workplaceAddress(), input.bossName(), input.bossPhone()
+            photoPath, docPath, input.workplaceName(), input.workplaceAddress(), input.bossName(), input.bossPhone(),
+            input.termsAccepted()
         );
         Long newUserId = jdbcTemplate.queryForObject("SELECT LAST_INSERT_ID()", Long.class);
         if (newUserId != null && newUserId > 0) {
@@ -996,13 +1012,14 @@ public class RegistrationService {
               full_name = ?, city = ?, profession = ?, gender = ?,
               assigned_agent_user_id = ?, pin = ?, secret_code = ?, account_password = ?, unique_code = ?,
               workplace_name = ?, workplace_address = ?, boss_name = ?, boss_phone = ?,
-              profile_photo_path = ?, id_document_path = ?, id_document_waived = ?
+              profile_photo_path = ?, id_document_path = ?, id_document_waived = ?,
+              terms_accepted = terms_accepted OR ?
             WHERE id = ? AND status = 'pending'
             """,
             input.fullName(), input.city(), input.profession(), input.gender(),
             input.assignedAgentUserId(), creds.pin(), creds.secretCode(), creds.accountPassword(), input.uniqueCode(),
             input.workplaceName(), input.workplaceAddress(), input.bossName(), input.bossPhone(),
-            photoPath, docPath, input.idDocumentWaived(), id
+            photoPath, docPath, input.idDocumentWaived(), input.termsAccepted(), id
         );
         if (isMobileClientSelfRegistration(input) || "client".equalsIgnoreCase(input.requestedRole())) {
             RegistrationInput activationInput = isMobileClientSelfRegistration(input)
@@ -1040,7 +1057,8 @@ public class RegistrationService {
             row.get("workplace_address") != null ? row.get("workplace_address").toString() : null,
             row.get("boss_name") != null ? row.get("boss_name").toString() : null,
             row.get("boss_phone") != null ? row.get("boss_phone").toString() : null,
-            Boolean.TRUE.equals(row.get("id_document_waived"))
+            Boolean.TRUE.equals(row.get("id_document_waived")),
+            Boolean.TRUE.equals(row.get("terms_accepted"))
         );
         String photo = row.get("profile_photo_path") != null ? row.get("profile_photo_path").toString() : null;
         String doc = row.get("id_document_path") != null ? row.get("id_document_path").toString() : null;

@@ -57,10 +57,47 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
+        <!-- Endpoint /actuator/prometheus (scrape métriques JVM/HTTP/Hikari/etc.). -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+        </dependency>
+        <!-- Cache mémoire (Caffeine) : voir config/CacheConfig.java. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-cache</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+        </dependency>
+        <!-- Encodeur JSON pour logs structurés (voir logback-spring.xml, appender optionnel
+             activé par PAYFLEX_LOG_JSON=true). -->
+        <dependency>
+            <groupId>net.logstash.logback</groupId>
+            <artifactId>logstash-logback-encoder</artifactId>
+            <!-- 8.1 requis avec logback-classic >= 1.5.13 (fourni par spring-boot-starter-parent
+                 3.4.5) ; 9.x exige Jackson 3 (non fourni par Spring Boot 3.4.x), donc évité. -->
+            <version>8.1</version>
+        </dependency>
+        <!-- Requis par la logique conditionnelle <if>/<then> de logback-spring.xml (activation
+             de l'appender JSON uniquement si PAYFLEX_LOG_JSON=true). -->
+        <dependency>
+            <groupId>org.codehaus.janino</groupId>
+            <artifactId>janino</artifactId>
+            <version>3.1.12</version>
+            <scope>runtime</scope>
+        </dependency>
         <dependency>
             <groupId>org.apache.pdfbox</groupId>
             <artifactId>pdfbox</artifactId>
             <version>3.0.2</version>
+        </dependency>
+        <!-- Export .xlsx (liste des cotisations) — même famille Apache que PDFBox déjà en place. -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>5.3.0</version>
         </dependency>
         <!-- Firebase Cloud Messaging (push mobile réel). Guardé : ne s'active que si
              PAYFLEX_FIREBASE_CREDENTIALS pointe vers un service account JSON valide. -->

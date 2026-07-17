@@ -23,6 +23,10 @@ import com.payflex.backend.service.AdminClientCredentialService;
 import com.payflex.backend.service.JobOfferService;
 import com.payflex.backend.service.LegalDocumentService;
 import com.payflex.backend.service.SurplusRegularizationService;
+import com.payflex.backend.service.ContributionRefundService;
+import com.payflex.backend.service.ContributionExcelExportService;
+import com.payflex.backend.service.ContributionReceiptService;
+import com.payflex.backend.service.AgentDeactivationService;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.dao.DataAccessException;
@@ -81,6 +85,10 @@ public class AdminViewController {
     private final JobOfferService jobOfferService;
     private final AdminRevenueService adminRevenueService;
     private final SurplusRegularizationService surplusRegularizationService;
+    private final ContributionRefundService contributionRefundService;
+    private final ContributionExcelExportService contributionExcelExportService;
+    private final ContributionReceiptService contributionReceiptService;
+    private final AgentDeactivationService agentDeactivationService;
 
     public AdminViewController(
         AdminDashboardService dashboardService,
@@ -104,7 +112,11 @@ public class AdminViewController {
         LegalDocumentService legalDocumentService,
         JobOfferService jobOfferService,
         AdminRevenueService adminRevenueService,
-        SurplusRegularizationService surplusRegularizationService
+        SurplusRegularizationService surplusRegularizationService,
+        ContributionRefundService contributionRefundService,
+        ContributionExcelExportService contributionExcelExportService,
+        ContributionReceiptService contributionReceiptService,
+        AgentDeactivationService agentDeactivationService
     ) {
         this.dashboardService = dashboardService;
         this.adminCrudService = adminCrudService;
@@ -128,6 +140,10 @@ public class AdminViewController {
         this.jobOfferService = jobOfferService;
         this.adminRevenueService = adminRevenueService;
         this.surplusRegularizationService = surplusRegularizationService;
+        this.contributionRefundService = contributionRefundService;
+        this.contributionExcelExportService = contributionExcelExportService;
+        this.contributionReceiptService = contributionReceiptService;
+        this.agentDeactivationService = agentDeactivationService;
     }
 
     @GetMapping({"/", "/admin"})
@@ -1020,14 +1036,40 @@ public class AdminViewController {
         @RequestParam(required = false) Long zoneId,
         @RequestParam String zone,
         @RequestParam(defaultValue = "false") boolean active,
+        @RequestParam(defaultValue = "false") boolean force,
         Principal principal
     ) {
-        adminCrudService.updateAgent(id, zoneId, zone, active);
+        try {
+            agentDeactivationService.applyStatusChange(id, zoneId, zone, active, force, principal.getName());
+        } catch (IllegalArgumentException ex) {
+            return redirectError("/admin/agents", ex.getMessage());
+        }
         adminAuditService.logEquipe(
             principal.getName(),
             "Mise à jour de la zone ou du statut actif d'un agent."
         );
         return "redirect:/admin/agents?success=1";
+    }
+
+    /**
+     * Désactivation/réactivation depuis la fiche agent détaillée (garde-fous caisse/dette +
+     * option de désactivation forcée avec orphelinage visible des clients — voir tâche 3).
+     */
+    @PostMapping("/admin/agents/{agentId}/status")
+    public String updateAgentStatus(
+        @PathVariable long agentId,
+        @RequestParam boolean active,
+        @RequestParam(defaultValue = "false") boolean force,
+        Principal principal
+    ) {
+        String base = "/admin/agents/" + agentId;
+        try {
+            AgentDeactivationService.DeactivationOutcome outcome =
+                agentDeactivationService.setActiveOnly(agentId, active, force, principal.getName());
+            return "redirect:" + base + "?success=status&active=" + active + "&orphaned=" + outcome.orphanedClients();
+        } catch (IllegalArgumentException ex) {
+            return redirectError(base, ex.getMessage());
+        }
     }
 
     @PostMapping("/admin/agents/delete")
@@ -1276,6 +1318,55 @@ public class AdminViewController {
             return "redirect:" + base + "?success=repayment&amount=" + amountFcfa;
         } catch (IllegalArgumentException ex) {
             return redirectError(base, ex.getMessage());
+        }
+    }
+
+    /**
+     * Remboursement/annulation d'une cotisation client déjà VALIDÉE (erreur de montant, changement
+     * d'avis…) — distinct du remboursement de dette agent ci-dessus. Voir {@link ContributionRefundService}
+     * pour le choix de conception sur les groupes de répartition multi-produits.
+     */
+    @PostMapping("/admin/contributions/{id}/refund")
+    public String refundContribution(
+        @PathVariable long id,
+        @RequestParam String reason,
+        @RequestParam(required = false) String from,
+        @RequestParam(required = false) Long agentId,
+        Principal principal
+    ) {
+        String base = "agent".equals(from) && agentId != null ? "/admin/agents/" + agentId : "/admin/contributions";
+        try {
+            ContributionRefundService.RefundResult r = contributionRefundService.refund(id, reason, principal.getName());
+            return "redirect:" + base + "?success=refund&count=" + r.refundedCount() + "&amount=" + r.totalRefundedFcfa();
+        } catch (IllegalArgumentException ex) {
+            return redirectError(base, ex.getMessage());
+        }
+    }
+
+    /** Export Excel (.xlsx) de la liste complète des cotisations — voir tâche 4. */
+    @GetMapping("/admin/contributions/export.xlsx")
+    public ResponseEntity<byte[]> exportContributionsXlsx() throws java.io.IOException {
+        byte[] xlsx = contributionExcelExportService.exportContributions(adminCrudService.getContributions());
+        return ResponseEntity.ok()
+            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"contributions.xlsx\"")
+            .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+            .body(xlsx);
+    }
+
+    /** Reçu PDF individuel pour UNE cotisation validée — voir tâche 6. */
+    @GetMapping("/admin/contributions/{id}/receipt.pdf")
+    public ResponseEntity<byte[]> contributionReceiptPdf(@PathVariable long id) throws java.io.IOException {
+        try {
+            ContributionReceiptService.ReceiptData data = contributionReceiptService.loadReceiptData(id, null);
+            byte[] pdf = contributionReceiptService.buildReceiptPdf(data);
+            return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"recu-cotisation-" + id + ".pdf\"")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(pdf);
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest()
+                .contentType(MediaType.TEXT_PLAIN)
+                .body(ex.getMessage().getBytes(StandardCharsets.UTF_8));
         }
     }
 
@@ -1973,13 +2064,18 @@ public class AdminViewController {
     @GetMapping("/admin/deliveries")
     public String deliveries(
         Model model,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "80") int size,
+        @RequestParam(required = false) String q,
         @RequestParam(required = false) String status
     ) {
         model.addAttribute("activePage", "deliveries");
         model.addAttribute("statusFilter", status);
-        model.addAttribute("deliveries", productDeliveryService.listDeliveries(status, 120));
+        model.addAttribute("q", q);
+        model.addAttribute("deliveriesPage", productDeliveryService.listDeliveriesPage(status, q, page, size));
         model.addAttribute("awaitingClosureCount", productDeliveryService.countAwaitingClosure());
         model.addAttribute("awaitingDeliveryCount", productDeliveryService.countAwaitingDelivery());
+        putFilterQuery(model, "q", q, "status", status);
         return "deliveries";
     }
 

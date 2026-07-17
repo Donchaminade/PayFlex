@@ -53,6 +53,9 @@ public class PublicUrlHttpsConfig {
                     filterChain.doFilter(request, response);
                     return;
                 }
+                // HSTS uniquement en mode « URL publique HTTPS » (même garde que le forçage
+                // HTTPS ci-dessus) : jamais en dev local HTTP, où ce filtre est inactif.
+                response.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
                 HttpServletRequest wrappedRequest = new HttpsRequestWrapper(request);
                 HttpServletResponse wrappedResponse = new HttpsLocationResponseWrapper(response, publicHost);
                 filterChain.doFilter(wrappedRequest, wrappedResponse);

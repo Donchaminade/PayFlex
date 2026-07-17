@@ -305,7 +305,7 @@ public class PayDunyaPaymentService {
             alertService.create(
                 contributionId,
                 ContributionValidationAlertService.TYPE_PAYDUNYA_APPROVED,
-                "Paiement PayDunya confirmé (jeton " + token + ")."
+                "Paiement PayDunya confirmé (jeton " + maskToken(token) + ")."
             );
         } else if (isCanceledOrFailed(status)) {
             int updated = jdbcTemplate.update(
@@ -323,9 +323,26 @@ public class PayDunyaPaymentService {
             alertService.create(
                 contributionId,
                 ContributionValidationAlertService.TYPE_PAYDUNYA_CANCELED,
-                "Paiement PayDunya annulé (jeton " + token + ")."
+                "Paiement PayDunya annulé (jeton " + maskToken(token) + ")."
             );
         }
+    }
+
+    /**
+     * Masque un jeton PayDunya avant stockage dans une alerte admin (DB + logs) : le jeton est
+     * un secret de paiement réutilisable (permet de re-consulter/rejouer le statut de la facture
+     * PayDunya), il ne doit donc jamais apparaître en clair hors des échanges directs avec l'API
+     * PayDunya. On ne garde que les 4 derniers caractères, à titre de repère de diagnostic.
+     */
+    private static String maskToken(String token) {
+        if (token == null || token.isBlank()) {
+            return "…";
+        }
+        String trimmed = token.trim();
+        if (trimmed.length() <= 4) {
+            return "…" + trimmed;
+        }
+        return "…" + trimmed.substring(trimmed.length() - 4);
     }
 
     private static boolean isCompleted(String status) {

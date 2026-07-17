@@ -1,0 +1,71 @@
+{
+  "@@locale": "fr",
+  "appName": "PayFlex",
+  "@appName": {
+    "description": "Nom de l'application, affiché sur l'écran d'accueil et le titre de la fenêtre."
+  },
+  "welcomeTitle": "Bienvenue sur PayFlex",
+  "@welcomeTitle": {
+    "description": "Titre de l'écran d'accueil (welcome_screen)."
+  },
+  "loginButton": "Se connecter",
+  "@loginButton": {
+    "description": "Libellé du bouton de connexion (login_screen)."
+  },
+  "logoutButton": "Se déconnecter",
+  "@logoutButton": {
+    "description": "Libellé du bouton de déconnexion (profile_screen, agent_profile_screen)."
+  },
+  "contribution": "Cotisation",
+  "@contribution": {
+    "description": "Terme métier « cotisation », utilisé dans le catalogue et le tableau de bord."
+  },
+  "balance": "Solde",
+  "@balance": {
+    "description": "Libellé « Solde » affiché dans le tableau de bord client."
+  },
+  "savings": "Épargne",
+  "@savings": {
+    "description": "Libellé « Épargne », utilisé pour l'épargne bonus."
+  },
+  "profile": "Profil",
+  "@profile": {
+    "description": "Titre/onglet du profil utilisateur."
+  },
+  "notifications": "Notifications",
+  "@notifications": {
+    "description": "Titre de l'écran des préférences de notifications."
+  },
+  "security": "Sécurité",
+  "@security": {
+    "description": "Titre de la section sécurité du profil."
+  },
+  "help": "Aide & support",
+  "@help": {
+    "description": "Libellé du centre d'assistance PayFlex."
+  },
+  "cancel": "Annuler",
+  "@cancel": {
+    "description": "Libellé générique du bouton d'annulation dans les dialogues."
+  },
+  "save": "Enregistrer",
+  "@save": {
+    "description": "Libellé générique du bouton de sauvegarde."
+  },
+  "networkErrorGeneric": "Connexion impossible. Vérifiez votre réseau et réessayez.",
+  "@networkErrorGeneric": {
+    "description": "Message d'erreur réseau générique et non technique (identifié dans l'audit UX)."
+  },
+  "serverUnavailableGeneric": "Le service PayFlex est momentanément indisponible. Réessayez dans un instant.",
+  "@serverUnavailableGeneric": {
+    "description": "Message d'erreur générique quand le serveur ne répond pas, non technique."
+  },
+  "unexpectedErrorGeneric": "Une erreur inattendue est survenue. Réessayez.",
+  "@unexpectedErrorGeneric": {
+    "description": "Message d'erreur générique de repli, non technique, pour les cas non prévus."
+  },
+  "comingSoon": "Bientôt disponible.",
+  "@comingSoon": {
+    "description": "Message générique utilisé pour les fonctionnalités pas encore livrées."
+  }
+}

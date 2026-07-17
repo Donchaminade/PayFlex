@@ -7,6 +7,8 @@ import '../../core/network/mobile_api_service.dart';
 import '../../core/providers/auth_provider.dart';
 import '../../core/services/biometric_auth_service.dart';
 import '../auth/login_screen.dart';
+import '../profile/notification_preferences_screen.dart';
+import '../profile/privacy_policy_screen.dart';
 import 'agent_change_pin_screen.dart';
 import 'agent_weekly_schedule_screen.dart';
 import 'agent_zone_tour_screen.dart';
@@ -237,6 +239,27 @@ class _AgentProfileScreenState extends ConsumerState<AgentProfileScreen> {
                             title: 'Authentification biométrique',
                             trailing: _biometricEnabled ? 'Activée' : 'Désactivée',
                             onTap: _toggleBiometric,
+                          ),
+                        ]),
+                        const SizedBox(height: 24),
+                        _buildMenuSection('Préférences', [
+                          _actionTile(
+                            icon: Icons.notifications_none_rounded,
+                            title: 'Notifications',
+                            trailing: '',
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const NotificationPreferencesScreen()),
+                            ),
+                          ),
+                          _actionTile(
+                            icon: Icons.privacy_tip_outlined,
+                            title: 'Politique de confidentialité',
+                            trailing: '',
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const PrivacyPolicyScreen()),
+                            ),
                           ),
                         ]),
                         const SizedBox(height: 32),

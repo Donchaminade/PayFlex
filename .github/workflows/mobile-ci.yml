@@ -1,0 +1,47 @@
+name: Mobile CI
+
+on:
+  push:
+    branches: ["**"]
+    paths:
+      - "payflex_mobile/**"
+      - ".github/workflows/mobile-ci.yml"
+  pull_request:
+    paths:
+      - "payflex_mobile/**"
+      - ".github/workflows/mobile-ci.yml"
+
+jobs:
+  analyze-and-test:
+    name: Analyze & test (Flutter 3.38.9)
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: payflex_mobile
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Version exacte lue dans payflex_mobile/.fvmrc. Pas besoin d'installer
+      # FVM lui-même en CI : cette action installe directement le SDK Flutter
+      # pinné, ce qui reproduit le même comportement que `fvm flutter` en local.
+      - name: Set up Flutter 3.38.9
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.38.9"
+          channel: "stable"
+          cache: true
+
+      - name: Flutter pub get
+        run: flutter pub get
+
+      # Pas de --fatal-infos / --fatal-warnings : le job doit échouer sur les
+      # erreurs d'analyse mais tolérer les ~181 warnings/infos préexistants
+      # déjà documentés dans le projet.
+      - name: Flutter analyze
+        run: flutter analyze
+
+      - name: Flutter test
+        run: flutter test

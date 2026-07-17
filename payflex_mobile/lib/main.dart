@@ -2,9 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'core/logging/payflex_error_logger.dart';
+import 'l10n/generated/app_localizations.dart';
 import 'core/navigation/payflex_navigator.dart';
 import 'core/network/api_config.dart';
 import 'core/network/api_config_store.dart';
@@ -69,6 +71,18 @@ class PayFlexApp extends ConsumerWidget {
         navigatorObservers: [PayflexSessionActivityObserver()],
         title: 'PayFlex',
         debugShowCheckedModeBanner: false,
+        // Infrastructure i18n : une seule locale active (fr) pour l'instant.
+        // Les chaînes en dur existantes ne sont PAS remplacées ici — voir
+        // lib/l10n/README.md pour l'extraction progressive à venir et
+        // l'ajout futur de l'Ewe (ee) / Kabiyè (kbp).
+        locale: const Locale('fr'),
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
         theme: AppTheme.lightTheme,
         themeMode: ThemeMode.light,
         home: const SplashScreen(),
