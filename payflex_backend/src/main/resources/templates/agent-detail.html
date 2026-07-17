@@ -83,6 +83,54 @@
     </div>
   </section>
 
+  <section class="pf-detail-panel" th:classappend="${agentDetails.active()} ? '' : ' border-rose-200'">
+    <h2 class="pf-detail-section-head"><i class="fa-solid fa-user-shield"></i>Statut du compte agent</h2>
+    <div class="flex flex-wrap items-center gap-3 mb-3">
+      <span class="pf-badge-soft text-xs font-bold" th:classappend="${agentDetails.active()} ? ' pf-badge-soft--emerald' : ' pf-badge-soft--red'">
+        <i class="fa-solid" th:classappend="${agentDetails.active()} ? ' fa-circle-check' : ' fa-circle-xmark'"></i>
+        <span th:text="${agentDetails.active()} ? ' Agent actif' : ' Agent inactif'"></span>
+      </span>
+      <span th:if="${agentDetails.cashDebtFcfa() > 0}" class="text-xs text-rose-700 font-medium">
+        <i class="fa-solid fa-triangle-exclamation mr-1"></i>Caisse/dette en attente : <span th:text="${#numbers.formatInteger(agentDetails.cashDebtFcfa(),0,'POINT')} + ' FCFA'"></span>
+      </span>
+    </div>
+
+    <form th:if="${agentDetails.active()}" method="post"
+          th:action="@{/admin/agents/{id}/status(id=${agentDetails.agentId()})}"
+          class="space-y-2 pf-confirm-submit"
+          data-confirm-title="Désactiver l'agent"
+          th:attr="data-confirm-text=|Désactiver ${agentDetails.fullName()} ? Il ne pourra plus collecter de nouvelles cotisations.|"
+          data-confirm-icon="warning" data-confirm-yes="Oui, désactiver">
+      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+      <input type="hidden" name="active" value="false">
+      <div th:if="${agentDetails.cashDebtFcfa() > 0}" class="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-900">
+        Cet agent a une caisse en attente / dette active. La désactivation normale est bloquée tant que ce n'est
+        pas régularisé (voir section Caisse ci-dessous). Vous pouvez malgré tout forcer la désactivation :
+        ses clients seront alors visiblement marqués « sans agent assigné » (à réaffecter manuellement).
+        <label class="flex items-center gap-2 mt-2 font-medium">
+          <input type="checkbox" name="force" value="true">
+          Je confirme la désactivation malgré la caisse/dette en cours
+        </label>
+      </div>
+      <button type="submit" class="pf-btn pf-btn-danger text-sm py-2 px-4">
+        <i class="fa-solid fa-user-slash mr-1"></i>Désactiver cet agent
+      </button>
+    </form>
+
+    <form th:unless="${agentDetails.active()}" method="post"
+          th:action="@{/admin/agents/{id}/status(id=${agentDetails.agentId()})}"
+          class="pf-confirm-submit"
+          data-confirm-title="Réactiver l'agent"
+          th:attr="data-confirm-text=|Réactiver ${agentDetails.fullName()} ? Il pourra de nouveau collecter des cotisations.|"
+          data-confirm-icon="question" data-confirm-yes="Oui, réactiver">
+      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+      <input type="hidden" name="active" value="true">
+      <button type="submit" class="pf-btn pf-btn-success text-sm py-2 px-4">
+        <i class="fa-solid fa-rotate-left mr-1"></i>Réactiver cet agent
+      </button>
+    </form>
+  </section>
+
   <section class="pf-detail-panel">
     <h2 class="pf-detail-section-head"><i class="fa-solid fa-chart-column"></i>Performance</h2>
     <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
@@ -253,21 +301,27 @@
   </section>
 
   <section class="pf-detail-panel">
-    <h2 class="pf-detail-section-head"><i class="fa-solid fa-receipt"></i>Cotisations remontées (centre)</h2>
-    <p class="text-xs text-slate-500 mb-3">Historique issu de la base PayFlex — les espèces saisies sur l’app agent arrivent <strong>en attente</strong> jusqu’à validation au centre (rapprochement fin de journée).</p>
+    <div class="flex flex-wrap items-center justify-between gap-2 mb-1">
+      <h2 class="pf-detail-section-head mb-0"><i class="fa-solid fa-receipt"></i>Cotisations remontées (centre)</h2>
+      <a href="/admin/contributions/export.xlsx" class="pf-btn pf-btn-secondary text-xs rounded-lg">
+        <i class="fa-solid fa-file-excel mr-1"></i>Export Excel (toutes cotisations)
+      </a>
+    </div>
+    <p class="text-xs text-slate-500 mb-3">Historique issu de la base PayFlex — les espèces saisies sur l’app agent arrivent <strong>en attente</strong> jusqu’à validation au centre (rapprochement fin de journée). Le produit ciblé et l’éventuelle répartition automatique multi-produits sont affichés comme sur la fiche client.</p>
     <p class="text-sm text-slate-600 py-4" th:if="${agentRecentContributions == null || agentRecentContributions.isEmpty()}">Aucune cotisation enregistrée pour cet agent dans la base centrale pour l’instant.</p>
     <div class="pf-detail-table-card overflow-x-auto" th:if="${agentRecentContributions != null && !agentRecentContributions.isEmpty()}">
-      <table class="w-full text-sm min-w-[640px]">
+      <table class="w-full text-sm min-w-[760px]">
         <thead>
         <tr>
           <th class="text-left py-2 px-3">Date / heure</th>
           <th class="text-left py-2 px-3">Client</th>
           <th class="text-left py-2 px-3">Téléphone</th>
+          <th class="text-left py-2 px-3">Produit</th>
           <th class="text-right py-2 px-3">Montant</th>
           <th class="text-left py-2 px-3">Mode</th>
           <th class="text-left py-2 px-3">Statut</th>
           <th class="text-left py-2 px-3">Réf.</th>
-          <th class="text-right py-2 px-3"></th>
+          <th class="text-right py-2 px-3 min-w-[14rem]">Actions</th>
         </tr>
         </thead>
         <tbody>
@@ -275,22 +329,45 @@
           <td class="py-2 px-3 text-slate-600 text-xs whitespace-nowrap font-mono" th:text="${row.createdAt()}"></td>
           <td class="py-2 px-3 font-medium text-slate-800" th:text="${row.clientName()}"></td>
           <td class="py-2 px-3 text-slate-600" th:text="${row.clientPhone()}"></td>
+          <td class="py-2 px-3 text-slate-700" th:text="${row.productName()}"></td>
           <td class="py-2 px-3 text-right font-medium tabular-nums" th:text="${#numbers.formatInteger(row.amount(),0,'POINT')} + ' FCFA'"></td>
           <td class="py-2 px-3 text-slate-600" th:text="${row.paymentMode()}"></td>
           <td class="py-2 px-3">
             <span th:if="${row.status() == 'validated'}" class="text-emerald-700 font-medium text-xs">Validée</span>
             <span th:if="${row.status() == 'pending'}" class="text-amber-700 font-medium text-xs">En attente</span>
-            <span th:if="${row.status() != 'validated' && row.status() != 'pending'}" class="text-slate-600 text-xs" th:text="${row.status()}"></span>
+            <span th:if="${row.status() == 'refunded'}" class="text-slate-500 font-medium text-xs"><i class="fa-solid fa-rotate-left mr-1"></i>Remboursée</span>
+            <span th:if="${row.status() != 'validated' && row.status() != 'pending' && row.status() != 'refunded'}" class="text-slate-600 text-xs" th:text="${row.status()}"></span>
           </td>
-          <td class="py-2 px-3 text-xs text-slate-500 font-mono max-w-[9rem] truncate" th:text="${row.referenceCode()}"></td>
-          <td class="py-2 px-3 text-right">
-            <a href="/admin/contributions" class="pf-btn pf-btn-secondary text-xs rounded-lg">Liste cotisations</a>
+          <td class="py-2 px-3 text-xs text-slate-500 font-mono max-w-[9rem] truncate">
+            <span th:text="${row.referenceCode()}"></span>
+            <span th:if="${row.isAllocated()}" class="pf-badge-soft pf-badge-soft--slate text-[10px] font-bold ml-1"
+                  title="Cette ligne provient d'un paiement réparti automatiquement sur plusieurs produits.">
+              <i class="fa-solid fa-arrows-split-up-and-left mr-1"></i>Réparti #<span th:text="${row.allocationGroupId()}"></span>
+            </span>
+          </td>
+          <td class="py-2 px-3 text-right whitespace-nowrap">
+            <a th:if="${row.status() == 'validated'}" th:href="@{/admin/contributions/{id}/receipt.pdf(id=${row.id()})}"
+               target="_blank" class="pf-btn pf-btn-secondary text-xs rounded-lg mr-1">
+              <i class="fa-solid fa-file-pdf mr-1"></i>Reçu
+            </a>
+            <button th:if="${row.status() == 'validated'}" type="button"
+                    class="pf-btn pf-btn-danger text-xs rounded-lg pf-refund-btn"
+                    th:attr="data-contribution-id=${row.id()},data-allocated=${row.isAllocated()},data-agent-id=${agentDetails.agentId()}">
+              <i class="fa-solid fa-rotate-left mr-1"></i>Rembourser
+            </button>
           </td>
         </tr>
         </tbody>
       </table>
     </div>
   </section>
+
+  <form id="pf-refund-form" method="post" action="" class="hidden">
+    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+    <input type="hidden" name="from" value="agent">
+    <input type="hidden" name="agentId" th:value="${agentDetails.agentId()}">
+    <input type="hidden" name="reason" id="pf-refund-reason">
+  </form>
 
   <section class="pf-detail-panel">
     <h2 class="pf-detail-section-head"><i class="fa-solid fa-users"></i>Clients rattachés à cet agent</h2>
@@ -359,11 +436,74 @@
         timer: 2600,
         showConfirmButton: false
       });
+    } else if (kind === 'refund') {
+      const count = p.get('count') || '1';
+      const amount = p.get('amount') || '0';
+      Swal.fire({
+        icon: 'success',
+        title: 'Cotisation remboursée',
+        text: count + ' ligne(s) remboursée(s) pour ' + amount + ' FCFA au total. Le client a été notifié.',
+        timer: 3200,
+        showConfirmButton: true
+      });
+    } else if (kind === 'status') {
+      const active = p.get('active') === 'true';
+      const orphaned = Number(p.get('orphaned') || '0');
+      let text = active ? "L'agent est de nouveau actif." : "L'agent a été désactivé.";
+      if (!active && orphaned > 0) {
+        text += ' ' + orphaned + " client(s) sont désormais sans agent assigné (à réaffecter manuellement).";
+      }
+      Swal.fire({
+        icon: active ? 'success' : (orphaned > 0 ? 'warning' : 'success'),
+        title: active ? 'Agent réactivé' : 'Agent désactivé',
+        text,
+        showConfirmButton: true
+      });
     }
   })();
 </script>
 <script th:if="${param.error != null && param.error.length > 0}" th:inline="javascript">
   Swal.fire({icon:'error',title:'Action impossible',text:[[${param.error[0]}]]});
+</script>
+<script>
+  (() => {
+    const refundForm = document.getElementById('pf-refund-form');
+    if (!refundForm) return;
+    document.querySelectorAll('.pf-refund-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.contributionId;
+        const allocated = btn.dataset.allocated === 'true';
+        const agentId = btn.dataset.agentId;
+        Swal.fire({
+          icon: 'warning',
+          title: 'Rembourser cette cotisation',
+          html: (allocated
+              ? '<p class="text-sm text-amber-800 mb-2">Cette cotisation fait partie d\'une répartition automatique multi-produits : ' +
+                'TOUT le groupe de répartition sera remboursé en une seule fois (montant total du versement d\'origine).</p>'
+              : '') +
+            '<textarea id="pf-refund-reason-input" class="swal2-textarea w-full" rows="3" placeholder="Motif du remboursement (min. 5 caractères)…"></textarea>',
+          showCancelButton: true,
+          confirmButtonText: 'Confirmer le remboursement',
+          cancelButtonText: 'Annuler',
+          confirmButtonColor: '#e11d48',
+          preConfirm: () => {
+            const v = document.getElementById('pf-refund-reason-input')?.value?.trim() || '';
+            if (v.length < 5) {
+              Swal.showValidationMessage("Indiquez un motif d'au moins 5 caractères.");
+              return false;
+            }
+            return v;
+          }
+        }).then((r) => {
+          if (!r.isConfirmed) return;
+          refundForm.action = '/admin/contributions/' + id + '/refund';
+          refundForm.querySelector('[name="agentId"]').value = agentId;
+          document.getElementById('pf-refund-reason').value = r.value;
+          refundForm.submit();
+        });
+      });
+    });
+  })();
 </script>
 <script src="/js/admin-wow.js"></script>
 </body>

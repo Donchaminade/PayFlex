@@ -14,6 +14,7 @@ public class ContributionValidationAlertService {
     public static final String TYPE_PAYDUNYA_CANCELED = "paydunya_canceled";
     public static final String TYPE_AGENT_CASH_DEBT = "agent_cash_debt";
     public static final String TYPE_UNALLOCATED_SURPLUS = "contribution_unallocated_surplus";
+    public static final String TYPE_CONTRIBUTION_REFUNDED = "contribution_refunded";
 
     private final JdbcTemplate jdbcTemplate;
 
