@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { ChevronRight } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { PlayStoreButton } from "@/components/shared/PlayStoreButton";
 import { services } from "@/lib/site-data";
 
 export const metadata: Metadata = {
@@ -33,19 +34,19 @@ export default function ServicePage() {
             {services.map((s, i) => (
               <div
                 key={s.title}
-                className={`flex flex-col gap-6 overflow-hidden rounded-3xl bg-white shadow-xl md:flex-row ${
+                className={`soft-card flex flex-col gap-6 overflow-hidden md:flex-row ${
                   i % 2 === 1 ? "md:flex-row-reverse" : ""
-                } dark:bg-slate-800`}
+                }`}
               >
                 <div className="relative h-64 md:h-auto md:w-2/5">
                   <Image src={s.image} alt={s.title} fill className="object-cover" />
                 </div>
                 <div className="flex flex-1 flex-col justify-center p-8">
                   <h3 className="text-2xl font-bold">{s.title}</h3>
-                  <p className="mt-3 text-slate-600 dark:text-slate-400">{s.description}</p>
+                  <p className="mt-3 text-[var(--pf-muted)]">{s.description}</p>
                   <Link
                     href={s.href}
-                    className="mt-6 inline-flex items-center gap-2 font-bold text-[var(--pf-primary)] hover:underline"
+                    className="mt-6 inline-flex items-center gap-2 font-bold text-[var(--pf-primary)] hover:underline dark:text-[var(--pf-secondary)]"
                   >
                     En savoir plus <ChevronRight className="h-4 w-4" />
                   </Link>
@@ -53,12 +54,13 @@ export default function ServicePage() {
               </div>
             ))}
           </div>
-          <div className="mt-16 rounded-3xl bg-gradient-to-r from-[var(--pf-primary)] to-[#062849] p-10 text-center text-white">
-            <h3 className="text-2xl font-bold">Prêt à démarrer avec PayFlex ?</h3>
+          <div className="relative mt-16 overflow-hidden rounded-[2rem] bg-gradient-to-r from-[#062a5c] to-[var(--pf-primary)] p-10 text-center text-white">
+            <h3 className="font-display text-2xl font-bold md:text-3xl">Prêt à démarrer avec PayFlex ?</h3>
             <p className="mt-2 text-white/80">Téléchargez l&apos;application mobile ou contactez notre équipe.</p>
-            <Link href="/contact" className="btn-pf-secondary mt-6">
-              Nous contacter
-            </Link>
+            <div className="mt-6 flex flex-wrap justify-center gap-4">
+              <PlayStoreButton variant="light" />
+              <Link href="/contact" className="btn-pf-secondary">Nous contacter</Link>
+            </div>
           </div>
         </div>
       </section>

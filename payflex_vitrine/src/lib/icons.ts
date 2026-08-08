@@ -26,6 +26,12 @@ export const featureIcons: Record<string, LucideIcon> = {
   headphones: Headphones,
 };
 
+export const serviceIcons = {
+  tools: Wrench,
+  wallet: Wallet,
+  headphones: Headphones,
+} as const;
+
 export const aboutIcons = {
   flexibility: Wallet,
   quality: ShieldCheck,

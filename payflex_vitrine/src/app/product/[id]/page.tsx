@@ -2,8 +2,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import { Check } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { ProductCard } from "@/components/shared/ProductCard";
+import { PlayStoreButton } from "@/components/shared/PlayStoreButton";
 import { getProductById, products } from "@/lib/site-data";
 
 type Props = { params: Promise<{ id: string }> };
@@ -32,28 +34,38 @@ export default async function ProductPage({ params }: Props) {
         ]}
       />
       <section className="py-20">
-        <div className="mx-auto grid max-w-7xl gap-12 px-4 lg:grid-cols-2 lg:px-6">
-          <div className="relative aspect-square overflow-hidden rounded-3xl shadow-xl">
-            <Image src={product.image} alt={product.name} fill className="object-cover" priority />
+        <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 lg:grid-cols-2 lg:px-6">
+          <div className="relative aspect-square overflow-hidden rounded-[2rem] border border-slate-200/70 bg-gradient-to-br from-[var(--pf-surface)] to-white shadow-[0_30px_80px_-40px_rgba(11,31,58,0.4)] dark:border-white/10 dark:from-white/[0.06] dark:to-transparent">
+            <Image src={product.image} alt={product.name} fill className="object-contain p-10" priority />
           </div>
           <div>
-            <span className="rounded-full bg-[var(--pf-primary)]/10 px-4 py-1 text-sm font-bold text-[var(--pf-primary)]">
+            <span className="rounded-full bg-[var(--pf-primary)]/10 px-4 py-1 text-sm font-bold text-[var(--pf-primary)] dark:text-[var(--pf-secondary)]">
               {product.category}
             </span>
-            <h2 className="mt-4 text-3xl font-bold">{product.name}</h2>
-            <p className="mt-4 text-slate-600 dark:text-slate-400">{product.description}</p>
-            <div className="mt-8 space-y-2">
-              <p>
-                <span className="font-semibold">Prix :</span> {product.price}
-              </p>
-              <p className="text-xl font-bold text-[var(--pf-primary)]">{product.monthly}</p>
+            <h2 className="mt-4 font-display text-3xl font-bold md:text-4xl">{product.name}</h2>
+            <p className="mt-4 text-[var(--pf-muted)]">{product.description}</p>
+            <div className="mt-8 flex flex-wrap items-end gap-x-8 gap-y-2">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-[var(--pf-muted)]">Prix total</p>
+                <p className="text-2xl font-bold">{product.price}</p>
+              </div>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-[var(--pf-muted)]">Cotisation</p>
+                <p className="text-2xl font-bold text-[var(--pf-primary)] dark:text-[var(--pf-secondary)]">{product.monthly}</p>
+              </div>
             </div>
-            <p className="mt-6 text-sm text-slate-500">
-              Cotisez via l&apos;application mobile PayFlex et recevez votre kit une fois le montant atteint.
-            </p>
-            <Link href="/contact" className="btn-pf-primary mt-8">
-              Demander des informations
-            </Link>
+            <ul className="mt-6 space-y-2 text-sm text-[var(--pf-muted)]">
+              {["Kit certifié avec garantie", "Paiement échelonné via Mobile Money", "Remise après objectif atteint"].map((f) => (
+                <li key={f} className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-[var(--pf-primary)] dark:text-[var(--pf-secondary)]" strokeWidth={2.5} />
+                  {f}
+                </li>
+              ))}
+            </ul>
+            <div className="mt-8 flex flex-wrap gap-4">
+              <PlayStoreButton />
+              <Link href="/contact" className="btn-pf-outline">Demander des informations</Link>
+            </div>
           </div>
         </div>
         {related.length > 0 && (
