@@ -84,18 +84,23 @@ export function Navbar() {
                   <div
                     className={`${
                       aboutOpen ? "block" : "hidden"
-                    } lg:absolute lg:left-0 lg:top-full lg:mt-2 lg:block lg:min-w-[240px] lg:rounded-2xl lg:border lg:border-slate-200/80 lg:bg-white lg:p-2 lg:shadow-xl lg:shadow-slate-900/10 dark:lg:border-white/10 dark:lg:bg-[#0d1730]`}
+                    } lg:absolute lg:left-0 lg:top-full lg:min-w-[240px] lg:pt-2`}
                   >
-                    {item.children.map((child) => (
-                      <Link
-                        key={child.href}
-                        href={child.href}
-                        className={`nav-dropdown-link ${isActive(pathname, child.href) ? "is-active" : ""}`}
-                        onClick={() => setOpen(false)}
-                      >
-                        {child.label}
-                      </Link>
-                    ))}
+                    <div className="flex flex-col gap-0.5 lg:rounded-2xl lg:border lg:border-slate-200/80 lg:bg-white lg:p-2 lg:shadow-xl lg:shadow-slate-900/10 dark:lg:border-white/10 dark:lg:bg-[#0d1730]">
+                      {item.children.map((child) => (
+                        <Link
+                          key={child.href}
+                          href={child.href}
+                          className={`nav-dropdown-link ${isActive(pathname, child.href) ? "is-active" : ""}`}
+                          onClick={() => {
+                            setOpen(false);
+                            setAboutOpen(false);
+                          }}
+                        >
+                          {child.label}
+                        </Link>
+                      ))}
+                    </div>
                   </div>
                 </div>
               );
