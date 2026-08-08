@@ -86,7 +86,7 @@ body::before {
 @layer components {
   /* ——— Typographie de section ——— */
   .eyebrow {
-    @apply inline-flex items-center gap-2 rounded-full border border-[var(--pf-ring)] bg-white/70 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--pf-primary)] shadow-sm backdrop-blur dark:bg-white/5 dark:text-[var(--pf-secondary)];
+    @apply inline-flex items-center gap-2 rounded-full border border-[rgba(11,74,158,0.2)] bg-white px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--pf-primary)] shadow-sm dark:border-white/15 dark:bg-white/5 dark:text-[var(--pf-secondary)];
   }
   .section-title {
     @apply inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-[var(--pf-primary)] dark:text-[var(--pf-secondary)];
@@ -181,7 +181,7 @@ body::before {
     background-color: var(--pf-secondary-deep);
   }
   .btn-pf-outline {
-    @apply inline-flex items-center justify-center gap-2 rounded-full border border-[var(--pf-ring)] bg-white/70 px-7 py-3.5 text-sm font-bold text-[var(--pf-primary)] backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:bg-white dark:bg-white/5 dark:text-white dark:hover:bg-white/10;
+    @apply inline-flex items-center justify-center gap-2 rounded-full border-2 border-[rgba(11,74,158,0.28)] bg-white px-7 py-3.5 text-sm font-bold text-[var(--pf-primary-ink)] transition-all duration-300 hover:-translate-y-0.5 hover:border-[rgba(11,74,158,0.55)] dark:border-white/25 dark:bg-white/5 dark:text-white dark:hover:bg-white/10;
   }
   .btn-pf-ghost {
     @apply inline-flex items-center justify-center gap-2 rounded-full border-2 border-white/40 bg-white/10 px-7 py-3.5 text-sm font-bold text-white backdrop-blur-sm transition-all duration-300 hover:border-white/70 hover:bg-white/20;
@@ -222,7 +222,7 @@ body::before {
   }
 
   .pill {
-    @apply inline-flex items-center gap-2 rounded-full border border-slate-200/70 bg-white/80 px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5 dark:text-slate-200;
+    @apply inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-sm dark:border-white/15 dark:bg-white/5 dark:text-slate-200;
   }
 
   /* ——— En-tête de page ——— */
