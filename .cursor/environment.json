@@ -1,0 +1,16 @@
+{
+  "name": "PayFlex — Backend + Vitrine",
+  "install": "bash .cursor/install.sh",
+  "start": "bash .cursor/start.sh",
+  "terminals": [
+    {
+      "name": "backend (Spring Boot :8088)",
+      "command": "bash .cursor/run-backend.sh"
+    },
+    {
+      "name": "vitrine (Next.js :3000)",
+      "command": "cd payflex_vitrine && npx next dev -p 3000"
+    }
+  ],
+  "ports": [8088, 3000]
+}
