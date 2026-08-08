@@ -20,8 +20,8 @@ export function Hero() {
     <section className="relative overflow-hidden" data-hero>
       {/* Décor doux */}
       <div className="pointer-events-none absolute inset-0 -z-10">
-        <div className="blob animate-blob absolute -left-24 -top-24 h-96 w-96 rounded-full bg-[var(--pf-primary)]/20" />
-        <div className="blob animate-blob absolute -right-16 top-24 h-80 w-80 rounded-full bg-[var(--pf-secondary)]/20" />
+        <div className="blob animate-blob absolute -left-24 -top-24 h-96 w-96 rounded-full bg-[var(--pf-primary)]/25" />
+        <div className="blob animate-blob absolute -right-16 top-24 h-80 w-80 rounded-full bg-[var(--pf-secondary)]/25" />
         <div
           className="absolute inset-0 opacity-[0.04]"
           style={{
@@ -54,8 +54,10 @@ export function Hero() {
             transition={{ duration: 0.7, ease, delay: 0.05 }}
             className="mt-6 font-display text-4xl font-bold leading-[1.08] tracking-tight text-slate-900 dark:text-white sm:text-5xl lg:text-6xl"
           >
-            Équipez-vous.
-            <span className="gradient-text"> Cotisez à votre rythme.</span>
+            Équipez-vous.{" "}
+            <span className="accent-underline">
+              <span className="gradient-text">Cotisez à votre rythme.</span>
+            </span>
           </motion.h1>
 
           <motion.p

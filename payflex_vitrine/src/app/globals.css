@@ -13,8 +13,22 @@
   --pf-surface: #eef3fb;
   --background: #ffffff;
   --foreground: #0b1f3a;
-  --pf-muted: #5b6b85;
-  --pf-ring: rgba(11, 74, 158, 0.12);
+  --pf-muted: #475569;
+  --pf-ring: rgba(11, 74, 158, 0.14);
+
+  /* Surface des cartes (thématisée pour un vrai relief en mode clair) */
+  --pf-card-bg: rgba(255, 255, 255, 0.92);
+  --pf-card-border: rgba(15, 31, 58, 0.1);
+  --pf-card-shadow: 0 1px 2px rgba(11, 31, 58, 0.05), 0 18px 40px -22px rgba(11, 31, 58, 0.22);
+  --pf-card-shadow-hover: 0 2px 6px rgba(11, 31, 58, 0.07), 0 30px 60px -24px rgba(11, 31, 58, 0.3);
+
+  /* Dégradé de titre — reste dans des bleus lisibles sur fond clair */
+  --pf-heading-grad: linear-gradient(115deg, var(--pf-primary-ink) 0%, var(--pf-primary) 55%, var(--pf-primary-soft) 100%);
+
+  /* Surfaces du menu (navbar) — thématisées pour un rendu fiable clair/sombre */
+  --pf-nav-panel: rgba(255, 255, 255, 0.96);
+  --pf-nav-border: rgba(15, 31, 58, 0.08);
+  --pf-nav-shadow: 0 20px 50px -24px rgba(11, 31, 58, 0.35);
 }
 
 .dark {
@@ -23,6 +37,20 @@
   --pf-surface: #0d1730;
   --pf-muted: #93a2c0;
   --pf-ring: rgba(120, 160, 230, 0.18);
+
+  /* Mode sombre conservé tel quel : cartes plates et nettes (bordure + relief léger) */
+  --pf-card-bg: rgba(255, 255, 255, 0.04);
+  --pf-card-border: rgba(255, 255, 255, 0.1);
+  --pf-card-shadow: none;
+  --pf-card-shadow-hover: none;
+
+  /* Dégradé de titre lumineux sur fond sombre (blanc → bleu clair → or) */
+  --pf-heading-grad: linear-gradient(115deg, #ffffff 0%, #cfe0ff 55%, var(--pf-secondary) 120%);
+
+  /* Surfaces du menu en mode sombre (bleu nuit opaque, cohérent avec le thème) */
+  --pf-nav-panel: rgba(9, 16, 33, 0.97);
+  --pf-nav-border: rgba(255, 255, 255, 0.1);
+  --pf-nav-shadow: 0 20px 50px -24px rgba(0, 0, 0, 0.7);
 }
 
 html {
@@ -97,6 +125,34 @@ body::before {
     @apply text-[var(--pf-primary)] dark:text-[var(--pf-secondary)];
   }
 
+  /* Panneau du menu mobile : surface thématisée, transparent/inline en desktop */
+  .nav-panel {
+    background: var(--pf-nav-panel);
+    border-color: var(--pf-nav-border);
+    @apply backdrop-blur-2xl;
+  }
+  @media (min-width: 1024px) {
+    .nav-panel {
+      background: transparent;
+      border-color: transparent;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
+  }
+
+  /* Carte du menu déroulant : transparente en mobile (dans le panneau), flottante opaque en desktop */
+  @media (min-width: 1024px) {
+    .nav-dropdown-card {
+      background: var(--pf-nav-panel);
+      border: 1px solid var(--pf-nav-border);
+      box-shadow: var(--pf-nav-shadow);
+      border-radius: 1rem;
+      padding: 0.5rem;
+      -webkit-backdrop-filter: blur(16px);
+      backdrop-filter: blur(16px);
+    }
+  }
+
   .nav-dropdown-link {
     @apply block rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 transition-colors duration-200 dark:text-slate-300;
   }
@@ -141,11 +197,19 @@ body::before {
   }
 
   /* ——— Cartes ——— */
-  .premium-card {
-    @apply rounded-3xl border border-slate-200/70 bg-white/90 p-6 shadow-[0_10px_40px_-24px_rgba(11,31,58,0.35)] backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_60px_-24px_rgba(11,31,58,0.4)] dark:border-white/10 dark:bg-white/[0.04];
-  }
+  .card-surface,
+  .premium-card,
   .soft-card {
-    @apply rounded-3xl border border-slate-200/70 bg-white/90 shadow-[0_10px_40px_-24px_rgba(11,31,58,0.3)] backdrop-blur dark:border-white/10 dark:bg-white/[0.04];
+    @apply rounded-3xl border backdrop-blur;
+    border-color: var(--pf-card-border);
+    background: var(--pf-card-bg);
+    box-shadow: var(--pf-card-shadow);
+  }
+  .premium-card {
+    @apply p-6 transition-all duration-300 hover:-translate-y-1;
+  }
+  .premium-card:hover {
+    box-shadow: var(--pf-card-shadow-hover);
   }
 
   .icon-box {
@@ -184,10 +248,20 @@ body::before {
   }
 
   .gradient-text {
-    background: linear-gradient(120deg, var(--pf-primary) 0%, var(--pf-primary-soft) 55%, var(--pf-secondary) 130%);
+    background: var(--pf-heading-grad);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
+  }
+
+  /* Accent surligné doux sous une expression clé */
+  .accent-underline {
+    @apply relative inline-block;
+  }
+  .accent-underline::after {
+    content: "";
+    @apply absolute -bottom-1 left-0 right-0 -z-10 h-3 rounded-full;
+    background: linear-gradient(90deg, rgba(250, 182, 45, 0.45), rgba(250, 182, 45, 0.15));
   }
 
   .section-spacing {
@@ -196,8 +270,8 @@ body::before {
 
   /* ——— Décor : blobs doux ——— */
   .blob {
-    filter: blur(60px);
-    opacity: 0.6;
+    filter: blur(56px);
+    opacity: 0.75;
   }
 
   @keyframes float {
@@ -226,5 +300,34 @@ body::before {
   .card-shine {
     background: linear-gradient(105deg, transparent 40%, rgba(255, 255, 255, 0.35) 50%, transparent 60%);
     animation: shine 6s ease-in-out infinite;
+  }
+
+  /* Zoom d'image doux au survol d'une carte */
+  .img-zoom {
+    @apply transition-transform duration-700 ease-out will-change-transform;
+  }
+  .group:hover .img-zoom {
+    transform: scale(1.06);
+  }
+}
+
+/* Accessibilité : respecter la préférence « mouvement réduit » */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .animate-float,
+  .animate-float-slow,
+  .animate-blob,
+  .card-shine,
+  .ken-burns {
+    animation: none !important;
+  }
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
   }
 }

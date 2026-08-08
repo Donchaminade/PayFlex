@@ -13,7 +13,7 @@ export function ProductCard({ product }: { product: Product }) {
     <motion.article
       whileHover={{ y: -6 }}
       transition={{ type: "spring", stiffness: 400, damping: 25 }}
-      className="group flex h-full flex-col overflow-hidden rounded-3xl border border-slate-200/70 bg-white/90 shadow-[0_10px_40px_-24px_rgba(11,31,58,0.35)] backdrop-blur dark:border-white/10 dark:bg-white/[0.04]"
+      className="card-surface group flex h-full flex-col overflow-hidden transition-shadow duration-300 hover:[box-shadow:var(--pf-card-shadow-hover)]"
     >
       <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-[var(--pf-surface)] to-white dark:from-white/[0.06] dark:to-transparent">
         <Image
