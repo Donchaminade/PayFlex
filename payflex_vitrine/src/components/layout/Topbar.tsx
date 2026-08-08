@@ -1,46 +1,38 @@
-"use client";
-
-import { Globe, Phone, Share2 } from "lucide-react";
-import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
-import { siteConfig } from "@/lib/site-data";
+import Link from "next/link";
+import { Clock, Mail, MapPin, Phone } from "lucide-react";
+import { appConfig, siteConfig } from "@/lib/site-data";
 
 export function Topbar() {
-  const pathname = usePathname();
-  const isHome = pathname === "/";
-  const [scrolled, setScrolled] = useState(false);
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 48);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  if (isHome && !scrolled) return null;
-
   return (
-    <div className="hidden border-b border-slate-200/60 bg-[var(--pf-secondary)] lg:block dark:border-slate-800">
-      <div className="mx-auto flex max-w-7xl items-stretch justify-between">
-        <div className="flex items-center gap-3 px-6 py-2 text-xs font-semibold text-[var(--pf-dark)]">
-          <span className="opacity-80">Suivez-nous</span>
-          {[Share2, Globe].map((Icon, i) => (
-            <a
-              key={i}
-              href="#"
-              className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--pf-dark)]/10 transition hover:bg-[var(--pf-dark)]/20"
-              aria-label="Réseau social"
-            >
-              <Icon className="h-3.5 w-3.5" />
-            </a>
-          ))}
+    <div className="hidden border-b border-slate-200/70 bg-[var(--pf-surface)]/70 backdrop-blur lg:block dark:border-white/10 dark:bg-white/[0.02]">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-2 text-xs text-[var(--pf-muted)] lg:px-8">
+        <div className="flex items-center gap-5">
+          <span className="flex items-center gap-1.5">
+            <MapPin className="h-3.5 w-3.5 text-[var(--pf-primary)]" />
+            {siteConfig.address}
+          </span>
+          <span className="flex items-center gap-1.5">
+            <Clock className="h-3.5 w-3.5 text-[var(--pf-primary)]" />
+            Lun – Sam · 08:00 – 19:00
+          </span>
         </div>
-        <div className="flex items-center gap-2 bg-[var(--pf-primary)] px-6 py-2 text-xs font-semibold text-white">
-          <Phone className="h-3.5 w-3.5" />
-          <span className="opacity-90">Appelez-nous :</span>
-          <a href={`tel:${siteConfig.phone.replace(/\s/g, "")}`} className="hover:underline">
-            {siteConfig.phone}
+        <div className="flex items-center gap-5 font-semibold text-slate-700 dark:text-slate-200">
+          <a href={`tel:${siteConfig.phone.replace(/\s/g, "")}`} className="flex items-center gap-1.5 transition hover:text-[var(--pf-primary)]">
+            <Phone className="h-3.5 w-3.5" />
+            {siteConfig.phoneDisplay}
           </a>
+          <a href={`mailto:${siteConfig.email}`} className="flex items-center gap-1.5 transition hover:text-[var(--pf-primary)]">
+            <Mail className="h-3.5 w-3.5" />
+            {siteConfig.email}
+          </a>
+          <Link
+            href={appConfig.playStoreUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="rounded-full bg-[var(--pf-secondary)] px-3 py-1 font-bold text-[var(--pf-dark)] transition hover:brightness-105"
+          >
+            Google Play
+          </Link>
         </div>
       </div>
     </div>

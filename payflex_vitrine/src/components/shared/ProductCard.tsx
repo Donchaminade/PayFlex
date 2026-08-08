@@ -13,31 +13,33 @@ export function ProductCard({ product }: { product: Product }) {
     <motion.article
       whileHover={{ y: -6 }}
       transition={{ type: "spring", stiffness: 400, damping: 25 }}
-      className="group overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900/80"
+      className="group flex h-full flex-col overflow-hidden rounded-3xl border border-slate-200/70 bg-white/90 shadow-[0_10px_40px_-24px_rgba(11,31,58,0.35)] backdrop-blur dark:border-white/10 dark:bg-white/[0.04]"
     >
-      <div className="relative aspect-[4/3] overflow-hidden bg-slate-100 dark:bg-slate-800">
+      <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-[var(--pf-surface)] to-white dark:from-white/[0.06] dark:to-transparent">
         <Image
           src={product.image}
           alt={product.name}
           fill
-          className="object-cover object-center transition duration-700 group-hover:scale-105"
+          className="object-contain p-4 transition duration-700 group-hover:scale-105"
           sizes="(max-width:768px) 50vw, 25vw"
         />
-        <div className="absolute inset-0 flex items-end justify-end bg-gradient-to-t from-black/50 to-transparent p-4 opacity-0 transition group-hover:opacity-100">
-          <Link
-            href={`/product/${product.id}`}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-[var(--pf-primary)] shadow-lg"
-          >
-            <ArrowUpRight className="h-5 w-5" />
-          </Link>
-        </div>
+        <span className="absolute left-3 top-3 rounded-full bg-white/90 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-[var(--pf-primary)] shadow-sm backdrop-blur">
+          {product.category}
+        </span>
+        <Link
+          href={`/product/${product.id}`}
+          aria-label={`Voir ${product.name}`}
+          className="absolute bottom-3 right-3 flex h-10 w-10 translate-y-2 items-center justify-center rounded-full bg-[var(--pf-primary)] text-white opacity-0 shadow-lg transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100"
+        >
+          <ArrowUpRight className="h-5 w-5" />
+        </Link>
       </div>
-      <div className="p-5">
-        <span className="text-xs font-bold uppercase tracking-wider text-[var(--pf-primary)]">{product.category}</span>
-        <Link href={`/product/${product.id}`} className="mt-1 block text-lg font-bold tracking-tight hover:text-[var(--pf-primary)]">
+      <div className="flex flex-1 flex-col p-5">
+        <Link href={`/product/${product.id}`} className="block text-lg font-bold tracking-tight transition hover:text-[var(--pf-primary)]">
           {product.name}
         </Link>
-        <p className="mt-2 font-semibold text-[var(--pf-primary)]">{product.monthly}</p>
+        <p className="mt-2 text-sm text-[var(--pf-muted)]">{product.price}</p>
+        <p className="mt-auto pt-3 font-semibold text-[var(--pf-primary)] dark:text-[var(--pf-secondary)]">{product.monthly}</p>
       </div>
     </motion.article>
   );
