@@ -24,6 +24,11 @@
 
   /* Dégradé de titre — reste dans des bleus lisibles sur fond clair */
   --pf-heading-grad: linear-gradient(115deg, var(--pf-primary-ink) 0%, var(--pf-primary) 55%, var(--pf-primary-soft) 100%);
+
+  /* Surfaces du menu (navbar) — thématisées pour un rendu fiable clair/sombre */
+  --pf-nav-panel: rgba(255, 255, 255, 0.96);
+  --pf-nav-border: rgba(15, 31, 58, 0.08);
+  --pf-nav-shadow: 0 20px 50px -24px rgba(11, 31, 58, 0.35);
 }
 
 .dark {
@@ -41,6 +46,11 @@
 
   /* Dégradé de titre lumineux sur fond sombre (blanc → bleu clair → or) */
   --pf-heading-grad: linear-gradient(115deg, #ffffff 0%, #cfe0ff 55%, var(--pf-secondary) 120%);
+
+  /* Surfaces du menu en mode sombre (bleu nuit opaque, cohérent avec le thème) */
+  --pf-nav-panel: rgba(9, 16, 33, 0.97);
+  --pf-nav-border: rgba(255, 255, 255, 0.1);
+  --pf-nav-shadow: 0 20px 50px -24px rgba(0, 0, 0, 0.7);
 }
 
 html {
@@ -113,6 +123,34 @@ body::before {
   }
   .nav-link.is-active {
     @apply text-[var(--pf-primary)] dark:text-[var(--pf-secondary)];
+  }
+
+  /* Panneau du menu mobile : surface thématisée, transparent/inline en desktop */
+  .nav-panel {
+    background: var(--pf-nav-panel);
+    border-color: var(--pf-nav-border);
+    @apply backdrop-blur-2xl;
+  }
+  @media (min-width: 1024px) {
+    .nav-panel {
+      background: transparent;
+      border-color: transparent;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
+  }
+
+  /* Carte du menu déroulant : transparente en mobile (dans le panneau), flottante opaque en desktop */
+  @media (min-width: 1024px) {
+    .nav-dropdown-card {
+      background: var(--pf-nav-panel);
+      border: 1px solid var(--pf-nav-border);
+      box-shadow: var(--pf-nav-shadow);
+      border-radius: 1rem;
+      padding: 0.5rem;
+      -webkit-backdrop-filter: blur(16px);
+      backdrop-filter: blur(16px);
+    }
   }
 
   .nav-dropdown-link {

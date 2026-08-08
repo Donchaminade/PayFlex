@@ -61,7 +61,7 @@ export function Navbar() {
         <div
           className={`${
             open ? "flex" : "hidden"
-          } absolute left-0 right-0 top-full flex-col gap-0.5 border-t border-slate-200/80 bg-white/95 p-4 backdrop-blur-2xl dark:border-white/10 dark:bg-[#070d1a]/95 lg:static lg:flex lg:flex-row lg:items-center lg:gap-1 lg:border-0 lg:bg-transparent lg:p-0`}
+          } nav-panel absolute left-0 right-0 top-full flex-col gap-0.5 border-t p-4 lg:static lg:flex lg:flex-row lg:items-center lg:gap-1 lg:border-0 lg:p-0`}
         >
           {navItems.map((item) => {
             if ("children" in item) {
@@ -86,7 +86,7 @@ export function Navbar() {
                       aboutOpen ? "block" : "hidden"
                     } lg:absolute lg:left-0 lg:top-full lg:min-w-[240px] lg:pt-2`}
                   >
-                    <div className="flex flex-col gap-0.5 lg:rounded-2xl lg:border lg:border-slate-200/80 lg:bg-white lg:p-2 lg:shadow-xl lg:shadow-slate-900/10 dark:lg:border-white/10 dark:lg:bg-[#0d1730]">
+                    <div className="nav-dropdown-card flex flex-col gap-0.5">
                       {item.children.map((child) => (
                         <Link
                           key={child.href}
