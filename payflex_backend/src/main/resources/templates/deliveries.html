@@ -37,6 +37,11 @@
     </div>
 
     <form method="get" action="/admin/deliveries" class="bg-white rounded-xl p-5 md:p-6 shadow-sm border border-slate-200/80 flex flex-wrap gap-4 items-end">
+      <div class="min-w-[14rem] flex-1">
+        <label class="block text-xs font-medium text-slate-600 mb-2">Rechercher (client, téléphone, produit)</label>
+        <input type="text" name="q" th:value="${q}" placeholder="Ex. Awa, 90 12 34 56, vélo…"
+               class="border rounded-lg px-3 py-2.5 text-sm bg-white w-full">
+      </div>
       <div class="min-w-[12rem]">
         <label class="block text-xs font-medium text-slate-600 mb-2">Filtrer</label>
         <select name="status" class="border rounded-lg px-3 py-2.5 text-sm bg-white w-full min-w-[14rem]">
@@ -67,10 +72,10 @@
         </tr>
         </thead>
         <tbody>
-        <tr th:if="${deliveries == null || deliveries.isEmpty()}">
+        <tr th:if="${deliveriesPage == null || deliveriesPage.items().isEmpty()}">
           <td colspan="6" class="py-12 px-4 text-center text-slate-500">Aucun dossier pour ce filtre.</td>
         </tr>
-        <tr th:each="d : ${deliveries}" class="border-t border-slate-100 align-top hover:bg-slate-50/40">
+        <tr th:each="d : ${deliveriesPage.items()}" class="border-t border-slate-100 align-top hover:bg-slate-50/40">
           <td class="py-4 px-4">
             <a th:href="@{/admin/clients/{id}(id=${d.userId()})}" class="font-semibold text-blue-700 hover:underline" th:text="${d.clientName()}">Client</a>
             <p class="text-xs text-slate-500" th:text="${d.clientPhone()}"></p>
@@ -121,6 +126,9 @@
         </tr>
         </tbody>
       </table>
+      </div>
+      <div class="px-4 md:px-5 pb-4">
+        <th:block th:replace="~{fragments/admin-chrome :: pagination(${deliveriesPage}, '/admin/deliveries', ${filterQuery})}"/>
       </div>
     </section>
 

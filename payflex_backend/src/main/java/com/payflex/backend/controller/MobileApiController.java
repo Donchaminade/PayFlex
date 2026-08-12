@@ -1173,6 +1173,28 @@ public class MobileApiController {
         return ResponseEntity.ok(result);
     }
 
+    /**
+     * Changement de PIN pour un compte CLIENT (l'équivalent de {@code /agent/profile/pin}
+     * n'existait que pour les agents). {@code AgentMobileService#changeAgentPin} n'a en réalité
+     * aucune logique spécifique au rôle agent (colonnes {@code pin}/{@code secret_code} de la
+     * table {@code users}, communes à tous les comptes) : on réutilise donc la même méthode déjà
+     * testée plutôt que de dupliquer la logique de hachage/validation du PIN.
+     */
+    @PostMapping("/profile/pin")
+    public ResponseEntity<?> clientChangePin(@RequestBody Map<String, Object> payload) {
+        long userId = parseLong(payload.get("userId"));
+        if (userId <= 0 || !credentialsMatch(payload, userId)) {
+            return ResponseEntity.status(401).body(Map.of("message", "Session invalide."));
+        }
+        String currentPin = payload.get("currentPin") == null ? "" : payload.get("currentPin").toString().trim();
+        String newPin = payload.get("newPin") == null ? "" : payload.get("newPin").toString().trim();
+        Map<String, Object> result = agentMobileService.changeAgentPin(userId, currentPin, newPin);
+        if (Boolean.FALSE.equals(result.get("ok"))) {
+            return ResponseEntity.status(403).body(result);
+        }
+        return ResponseEntity.ok(result);
+    }
+
     @PostMapping("/agent/contributions/registry")
     public ResponseEntity<?> agentContributionRegistry(@RequestBody Map<String, Object> payload) {
         long agentUserId = parseLong(payload.get("userId"));
@@ -1387,8 +1409,18 @@ public class MobileApiController {
         @RequestParam(required = false) MultipartFile profilePhoto,
         @RequestParam(required = false) MultipartFile idDocument,
         @RequestParam(required = false, defaultValue = "false") String idDocumentWaived,
-        @RequestParam(required = false, defaultValue = "") String productSelections
+        @RequestParam(required = false, defaultValue = "") String productSelections,
+        @RequestParam(required = false) Boolean termsAccepted
     ) {
+        // RGPD : rejet uniquement si la case a été explicitement décochée et transmise (les clients
+        // mobile pas encore mis à jour pour ce champ n'envoient rien → non bloqués rétroactivement,
+        // voir RegistrationService/RegistrationInput#termsAccepted pour le détail du choix).
+        if (Boolean.FALSE.equals(termsAccepted)) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "message", "Vous devez accepter les conditions générales d'utilisation et la politique de confidentialité pour vous inscrire."
+            ));
+        }
+        boolean termsAcceptedValue = Boolean.TRUE.equals(termsAccepted);
         if ("agent".equalsIgnoreCase(submittedBy)) {
             if (submittedByAgentUserId == null || submittedByAgentUserId <= 0) {
                 return ResponseEntity.badRequest().body(Map.of("message", "En tant qu'agent, vous devez être identifié pour déposer cette demande."));
@@ -1418,7 +1450,7 @@ public class MobileApiController {
                 new RegistrationService.RegistrationInput(
                     fullName, phoneNorm, email, city, profession, gender, submittedBy, roleToStore,
                     submittedByAgentUserId, assignedAgentUserId, pinTrim, pinTrim, passwordTrim, uniqueCode,
-                    workplaceName, workplaceAddress, bossName, bossPhone, waived
+                    workplaceName, workplaceAddress, bossName, bossPhone, waived, termsAcceptedValue
                 ),
                 profilePhoto,
                 idDocument

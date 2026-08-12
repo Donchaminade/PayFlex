@@ -666,6 +666,7 @@ class AuthNotifier extends Notifier<AuthState> {
         profilePhoto: data['profilePhoto'] is File ? data['profilePhoto'] as File : null,
         idDocument: data['idDocument'] is File ? data['idDocument'] as File : null,
         idDocumentWaived: data['idDocumentWaived'] == true,
+        termsAccepted: data['termsAccepted'] == true,
       );
       state = state.copyWith(isLoading: false);
       if (!result.success) {

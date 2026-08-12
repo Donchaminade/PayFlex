@@ -465,7 +465,7 @@ public class AgentMobileService {
                 agentUserId
             );
             out.put("ok", true);
-            out.put("message", "Code PIN agent mis à jour.");
+            out.put("message", "Code PIN mis à jour.");
         } catch (EmptyResultDataAccessException ex) {
             out.put("ok", false);
             out.put("message", "Compte introuvable.");

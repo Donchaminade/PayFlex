@@ -1,5 +1,6 @@
 package com.payflex.backend.service;
 
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
@@ -36,6 +37,10 @@ public class PermissionService {
         return n != null && n > 0;
     }
 
+    // Assignations de permissions par utilisateur : rarement modifiées, lues à chaque requête
+    // sensible (contrôle d'accès). Le TTL court (voir config/CacheConfig.java) limite le risque
+    // de permission périmée après une modification admin.
+    @Cacheable("userPermissions")
     public List<String> permissionCodesForUser(long userId) {
         if (userId <= 0) return List.of();
         return jdbcTemplate.query(

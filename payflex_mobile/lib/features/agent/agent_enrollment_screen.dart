@@ -69,6 +69,7 @@ class _AgentEnrollmentScreenState extends ConsumerState<AgentEnrollmentScreen> {
   String _gender = 'Homme';
   String _financingType = 'cotisation_journaliere';
   bool _clientWithoutPhone = false;
+  bool _acceptCgu = false;
   bool _isPasswordVisible = false;
   bool _isConfirmVisible = false;
   bool _isPinVisible = false;
@@ -187,6 +188,14 @@ class _AgentEnrollmentScreenState extends ConsumerState<AgentEnrollmentScreen> {
 
   Future<void> _saveClient() async {
     if (_formStep4.currentState?.validate() != true) return;
+    if (!_acceptCgu) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Le client doit accepter les conditions générales d’utilisation et la politique de confidentialité.'),
+        ),
+      );
+      return;
+    }
 
     final auth = ref.read(authProvider);
     if (auth.userId == null) {
@@ -250,6 +259,7 @@ class _AgentEnrollmentScreenState extends ConsumerState<AgentEnrollmentScreen> {
         idDocument: _idDocument,
         idDocumentWaived: _noIdDocument || _idDocument == null,
         productSelections: productSelections,
+        termsAccepted: _acceptCgu,
       );
 
       if (mounted && !regResult.success) {
@@ -948,6 +958,28 @@ class _AgentEnrollmentScreenState extends ConsumerState<AgentEnrollmentScreen> {
             required: false,
             textStyle: _fieldStyle,
             validator: (v) => PayflexPhoneValidator.validate(v, required: false),
+          ),
+          const SizedBox(height: 20),
+          Material(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            child: CheckboxListTile(
+              value: _acceptCgu,
+              onChanged: (v) => setState(() => _acceptCgu = v == true),
+              activeColor: AppColors.primary,
+              title: Text(
+                'Le client accepte les conditions générales d’utilisation et la politique de confidentialité PayFlex *',
+                style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF1E293B)),
+              ),
+              subtitle: !_acceptCgu
+                  ? Text(
+                      'Acceptation obligatoire pour finaliser l’inscription.',
+                      style: GoogleFonts.inter(fontSize: 11, color: Colors.orange.shade800),
+                    )
+                  : null,
+              controlAffinity: ListTileControlAffinity.leading,
+              contentPadding: EdgeInsets.zero,
+            ),
           ),
           const SizedBox(height: 20),
           RegistrationFormTheme.sectionTitle('Code PIN secret du client'),

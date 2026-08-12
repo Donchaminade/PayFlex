@@ -831,6 +831,15 @@ public class AdminCrudService {
         );
     }
 
+    /** Change uniquement le statut actif/inactif, sans toucher à la zone (utilisé par la fiche agent détaillée). */
+    public void setAgentActive(long id, boolean active) {
+        if (id <= 0) throw new IllegalArgumentException("ID agent invalide");
+        int n = jdbcTemplate.update("UPDATE agents SET active = ? WHERE id = ?", active, id);
+        if (n == 0) {
+            throw new IllegalArgumentException("Agent introuvable");
+        }
+    }
+
     public void updateAgent(long id, Long zoneId, String zoneLabel, boolean active) {
         if (id <= 0) throw new IllegalArgumentException("ID agent invalide");
         if (zoneId != null && zoneId > 0) {
@@ -861,6 +870,61 @@ public class AdminCrudService {
         if (deleted == 0) {
             throw new IllegalArgumentException("Agent introuvable");
         }
+    }
+
+    /** État minimal requis pour arbitrer une désactivation d'agent (caisse en attente / dette). */
+    public record AgentStatusSnapshot(long agentId, long userId, String fullName, boolean active, double cashDebtFcfa) {}
+
+    public AgentStatusSnapshot getAgentStatusSnapshot(long agentId) {
+        try {
+            return jdbcTemplate.queryForObject(
+                """
+                SELECT a.id AS agent_id, a.user_id, u.full_name, a.active, COALESCE(a.cash_debt_fcfa, 0) AS cash_debt_fcfa
+                FROM agents a
+                JOIN users u ON u.id = a.user_id
+                WHERE a.id = ?
+                """,
+                (rs, i) -> new AgentStatusSnapshot(
+                    rs.getLong("agent_id"),
+                    rs.getLong("user_id"),
+                    rs.getString("full_name"),
+                    rs.getBoolean("active"),
+                    rs.getDouble("cash_debt_fcfa")
+                ),
+                agentId
+            );
+        } catch (EmptyResultDataAccessException ex) {
+            throw new IllegalArgumentException("Agent introuvable.");
+        }
+    }
+
+    /**
+     * Désactivation forcée : les clients de cet agent deviennent visiblement « sans agent assigné »
+     * ({@code assigned_agent_user_id = NULL}, déjà interprété comme tel par l'UI clients). Aucune
+     * réassignation automatique — un admin doit ensuite réaffecter manuellement.
+     */
+    @Transactional
+    public int orphanClientsForAgent(long agentUserId) {
+        if (agentUserId <= 0) {
+            return 0;
+        }
+        return jdbcTemplate.update(
+            "UPDATE users SET assigned_agent_user_id = NULL WHERE assigned_agent_user_id = ?",
+            agentUserId
+        );
+    }
+
+    /** Clients actifs actuellement sans agent assigné (visibilité bandeau liste agents). */
+    public long countClientsWithoutAgent() {
+        Long n = jdbcTemplate.queryForObject(
+            """
+            SELECT COUNT(*) FROM users u
+            JOIN roles r ON r.id = u.role_id
+            WHERE r.code = 'client' AND u.assigned_agent_user_id IS NULL AND u.status IN ('valide', 'adhere')
+            """,
+            Long.class
+        );
+        return n == null ? 0L : n;
     }
 
     public List<UserChoice> getUserChoices() {
@@ -1324,27 +1388,40 @@ public class AdminCrudService {
     }
     public record ProductContributionRow(long contributionId, String userName, String agentName, double amount, String status, String createdAt) {}
 
-    /** Dernières cotisations rattachées à l’agent (tableau central). */
+    /**
+     * Dernières cotisations rattachées à l’agent (tableau central). Inclut le produit ciblé et
+     * l’éventuel groupe de répartition automatique multi-produits (même logique/nommage que
+     * {@link ClientContributionRow#isAllocated()} sur la fiche client, pour la parité des deux fiches).
+     */
     public record AgentContributionLine(
         long id,
         String clientName,
         String clientPhone,
+        String productName,
         double amount,
         String paymentMode,
         String status,
         String referenceCode,
-        String createdAt
-    ) {}
+        String createdAt,
+        Long allocationGroupId
+    ) {
+        /** Cette ligne provient d'une répartition automatique d'un paiement sur plusieurs produits. */
+        public boolean isAllocated() {
+            return allocationGroupId != null && allocationGroupId > 0;
+        }
+    }
 
     public List<AgentContributionLine> getRecentContributionsForAgent(long agentRowId, int limit) {
         int lim = Math.min(Math.max(limit, 1), 80);
         return jdbcTemplate.query(
             """
-            SELECT c.id, u.full_name, u.phone, c.amount, c.payment_mode, c.status,
+            SELECT c.id, u.full_name, u.phone, COALESCE(p.name, '—') AS product_name,
+                   c.amount, c.payment_mode, c.status,
                    COALESCE(c.reference_code, '') AS reference_code,
-                   c.created_at AS created_at
+                   c.created_at AS created_at, c.allocation_group_id
             FROM contributions c
             JOIN users u ON u.id = c.user_id
+            LEFT JOIN products p ON p.id = c.product_id
             WHERE c.agent_id = ?
             ORDER BY c.created_at DESC
             LIMIT ?
@@ -1353,13 +1430,15 @@ public class AdminCrudService {
                 rs.getLong("id"),
                 rs.getString("full_name"),
                 rs.getString("phone"),
+                rs.getString("product_name"),
                 rs.getDouble("amount"),
                 rs.getString("payment_mode"),
                 rs.getString("status"),
                 rs.getString("reference_code"),
                 rs.getTimestamp("created_at") != null
                     ? rs.getTimestamp("created_at").toInstant().toString()
-                    : ""
+                    : "",
+                rs.getObject("allocation_group_id") == null ? null : rs.getLong("allocation_group_id")
             ),
             agentRowId,
             lim

@@ -95,6 +95,70 @@ public class ProductDeliveryService {
         return n == null ? 0L : n;
     }
 
+    /**
+     * Version paginée (avec recherche client/produit) de {@link #listDeliveries(String, int)},
+     * suivant EXACTEMENT le même pattern que {@code AdminCrudService.getAgentsPage}/{@code getUsersPage}
+     * (page 0-based, {@code AdminCrudService.PageResult}), pour une pagination cohérente sur tout l'admin.
+     */
+    public AdminCrudService.PageResult<DeliveryRow> listDeliveriesPage(
+        String statusFilter,
+        String q,
+        int page,
+        int size
+    ) {
+        int effectiveSize = AdminCrudService.normalizePageSize(size);
+        int effectivePage = Math.max(page, 0);
+
+        StringBuilder where = new StringBuilder(" WHERE 1=1 ");
+        List<Object> args = new ArrayList<>();
+        if (statusFilter != null && !statusFilter.isBlank()) {
+            where.append(" AND d.status = ? ");
+            args.add(statusFilter.trim());
+        }
+        if (q != null && !q.isBlank()) {
+            where.append(" AND (u.full_name LIKE ? OR u.phone LIKE ? OR p.name LIKE ?) ");
+            String like = "%" + q.trim() + "%";
+            args.add(like);
+            args.add(like);
+            args.add(like);
+        }
+
+        String fromJoin = """
+            FROM client_product_deliveries d
+            JOIN users u ON u.id = d.user_id
+            JOIN products p ON p.id = d.product_id
+            """;
+
+        Long total = jdbcTemplate.queryForObject(
+            "SELECT COUNT(*) " + fromJoin + where,
+            Long.class,
+            args.toArray()
+        );
+        long totalLong = total != null ? total : 0;
+
+        String orderBy = (statusFilter != null && !statusFilter.isBlank())
+            ? " ORDER BY d.updated_at DESC "
+            : " ORDER BY FIELD(d.status, '" + STATUS_AWAITING_CLOSURE + "', '" + STATUS_CLOSURE_VALIDATED
+                + "', '" + STATUS_DELIVERED + "'), d.updated_at DESC ";
+
+        List<Object> pageArgs = new ArrayList<>(args);
+        pageArgs.add(effectiveSize);
+        pageArgs.add(effectivePage * effectiveSize);
+
+        List<DeliveryRow> items = jdbcTemplate.query(
+            """
+            SELECT d.id, d.user_id, u.full_name, u.phone, d.product_id, p.name AS product_name,
+                   d.status, d.total_validated, d.product_price, d.catchup_days_snapshot,
+                   d.admin_note, d.closed_by, d.closed_at, d.delivered_by, d.delivered_at,
+                   d.stock_reference, d.created_at
+            """
+                + fromJoin + where + orderBy + " LIMIT ? OFFSET ?",
+            pageArgs.toArray(),
+            (rs, i) -> mapDeliveryRow(rs)
+        );
+        return AdminCrudService.PageResult.of(items, effectivePage, effectiveSize, totalLong);
+    }
+
     public List<DeliveryRow> listDeliveries(String statusFilter, int limit) {
         int lim = Math.min(Math.max(limit, 1), 200);
         StringBuilder sql = new StringBuilder(

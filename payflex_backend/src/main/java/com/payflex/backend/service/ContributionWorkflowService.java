@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -518,12 +519,35 @@ public class ContributionWorkflowService {
             double shortfall = totalExpected - collectedFcfa;
             debtRecorded = Math.max(0, Math.round(shortfall));
             if (debtRecorded > 0 && !agentTotals.isEmpty()) {
-                for (Map.Entry<Long, Double> entry : agentTotals.entrySet()) {
-                    double share = entry.getValue() / totalExpected;
-                    long agentDebt = Math.round(shortfall * share);
+                // Méthode du "plus grand reste" (Hamilton) : arrondir chaque part indépendamment
+                // (Math.round) peut faire dériver la somme de quelques FCFA par rapport à
+                // debtRecorded (ex. 3 agents à parts égales sur 100 FCFA -> 33+33+33=99). On
+                // distribue donc les FCFA arrondis exactement, sans reste perdu ni créé.
+                List<Map.Entry<Long, Double>> entries = new ArrayList<>(agentTotals.entrySet());
+                long[] baseShares = new long[entries.size()];
+                double[] remainders = new double[entries.size()];
+                long allocatedSum = 0;
+                for (int i = 0; i < entries.size(); i++) {
+                    double exact = shortfall * (entries.get(i).getValue() / totalExpected);
+                    long base = (long) Math.floor(exact);
+                    baseShares[i] = base;
+                    remainders[i] = exact - base;
+                    allocatedSum += base;
+                }
+                long remaining = debtRecorded - allocatedSum;
+                Integer[] order = new Integer[entries.size()];
+                for (int i = 0; i < order.length; i++) {
+                    order[i] = i;
+                }
+                Arrays.sort(order, (a, b) -> Double.compare(remainders[b], remainders[a]));
+                for (int k = 0; k < remaining && k < order.length; k++) {
+                    baseShares[order[k]] += 1;
+                }
+                for (int i = 0; i < entries.size(); i++) {
+                    long agentDebt = baseShares[i];
                     if (agentDebt > 0) {
                         recordAgentCashDebt(
-                            entry.getKey(),
+                            entries.get(i).getKey(),
                             agentDebt,
                             collectedRounded,
                             expectedRounded,

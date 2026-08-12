@@ -18,13 +18,31 @@ const libre = Libre_Baskerville({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://payflex.com"),
   title: {
     default: "PayFlex — Cotisation progressive pour artisans",
     template: "%s | PayFlex",
   },
   description:
-    "PayFlex permet aux apprentis et artisans d'acquérir leurs outils professionnels grâce à un paiement échelonné flexible.",
+    "PayFlex permet aux apprentis et artisans du Togo d'acquérir leurs outils professionnels grâce à un paiement échelonné via Mobile Money. Application disponible sur Google Play.",
+  keywords: ["PayFlex", "artisans", "apprentis", "Togo", "Mobile Money", "cotisation", "outils", "Google Play"],
   icons: { icon: "/img/pflex.jpeg" },
+  openGraph: {
+    title: "PayFlex — Équipez-vous, cotisez à votre rythme",
+    description:
+      "Acquérez vos outils professionnels grâce au paiement échelonné via Mobile Money. Téléchargez PayFlex sur Google Play.",
+    url: "https://payflex.com",
+    siteName: "PayFlex",
+    locale: "fr_FR",
+    type: "website",
+    images: [{ url: "/img/og-cover.png", width: 1200, height: 675, alt: "PayFlex" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "PayFlex — Équipez-vous, cotisez à votre rythme",
+    description: "Paiement échelonné via Mobile Money pour artisans et apprentis. Sur Google Play.",
+    images: ["/img/og-cover.png"],
+  },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

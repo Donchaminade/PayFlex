@@ -2,6 +2,15 @@
 <configuration>
     <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
 
+    <!-- Logs JSON structurés (Logstash encoder) : désactivés par défaut pour ne pas casser le
+         confort du dev local (texte lisible en console + fichiers texte ci-dessous, avec leur
+         rotation déjà en place). Activés uniquement si PAYFLEX_LOG_JSON=true (typiquement en
+         prod / derrière un collecteur de logs). Écrit sur STDOUT plutôt que sur un fichier
+         séparé : le plus simple à brancher sur un agrégateur de logs container/systemd sans
+         dupliquer la logique de rotation déjà gérée par ERROR_FILE/DIAGNOSTIC_FILE/MOBILE_API_FILE
+         ci-dessous. -->
+    <property name="payflexLogJson" value="${PAYFLEX_LOG_JSON:-false}"/>
+
   <!-- Chemins configurables dans application.yml (payflex.logging.*) -->
     <!-- Dossier de logs dédié : hors racine projet, configurable via PAYFLEX_LOG_DIR -->
     <springProperty scope="context" name="payflexLogDir"
@@ -21,6 +30,13 @@
             <pattern>${LOG_PATTERN}</pattern>
             <charset>UTF-8</charset>
         </encoder>
+    </appender>
+
+    <!-- JSON structuré (un objet JSON par ligne sur STDOUT) — actif uniquement si
+         PAYFLEX_LOG_JSON=true. Ne remplace pas CONSOLE/ERROR_FILE/DIAGNOSTIC_FILE/
+         MOBILE_API_FILE : s'ajoute en plus, pour un agrégateur de logs externe. -->
+    <appender name="JSON_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
     </appender>
 
     <!-- ERROR uniquement — stack traces complètes -->
@@ -102,5 +118,10 @@
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="ERROR_FILE"/>
         <appender-ref ref="DIAGNOSTIC_FILE"/>
+        <if condition='property("payflexLogJson").equalsIgnoreCase("true")'>
+            <then>
+                <appender-ref ref="JSON_CONSOLE"/>
+            </then>
+        </if>
     </root>
 </configuration>
