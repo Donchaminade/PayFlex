@@ -29,7 +29,7 @@ export function Topbar() {
             href={appConfig.playStoreUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="rounded-full bg-[var(--pf-secondary)] px-3 py-1 font-bold text-[var(--pf-dark)] transition hover:brightness-105"
+            className="rounded-full bg-[var(--pf-secondary)] px-3 py-1 font-bold text-[#0b1f3a] transition hover:bg-[var(--pf-secondary-deep)] hover:text-[#0b1f3a]"
           >
             Google Play
           </Link>
