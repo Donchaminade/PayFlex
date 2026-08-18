@@ -1,18 +1,18 @@
 # PayFlex — Site vitrine (Next.js)
 
-Site vitrine public du projet PayFlex, remplaçant les pages HTML statiques à la racine du dépôt.
+Site vitrine public de PayFlex. Production : [https://payflex-one.vercel.app](https://payflex-one.vercel.app).
 
 ## Pages
 
-| Route | Équivalent ancien |
-|-------|-------------------|
-| `/` | `index.html` |
-| `/about` | `about.html` (+ `#team`, `#testimonials`) |
-| `/feature` | `feature.html` |
-| `/service` | `service.html` |
-| `/catalogue` | `catalogue.html` |
-| `/product/[id]` | `product.html` |
-| `/contact` | `contact.html` |
+| Route | Contenu |
+|-------|---------|
+| `/` | Accueil |
+| `/about` | À propos (`#team`, `#testimonials`) |
+| `/feature` | Fonctionnalités |
+| `/service` | Services |
+| `/catalogue` | Catalogue produits |
+| `/product/[id]` | Fiche produit |
+| `/contact` | Contact |
 
 ## Démarrage
 
@@ -31,10 +31,14 @@ npm run build
 npm start
 ```
 
+## Déploiement
+
+Le projet Vercel `payflex` a pour racine ce dossier (`payflex_vitrine`). Déployer depuis ici :
+
+```bash
+npx vercel --prod
+```
+
 ## Assets
 
-Les images sont dans `public/img/` (copiées depuis `PayFlex/img/`).
-
-## Note
-
-Ne supprimez pas les anciens fichiers HTML/CSS à la racine tant que cette vitrine n’est pas validée en local.
+Les images sont dans `public/img/`.
