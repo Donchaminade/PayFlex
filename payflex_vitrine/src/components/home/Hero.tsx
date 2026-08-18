@@ -46,7 +46,7 @@ export function Hero() {
           >
             <span className="eyebrow">
               <Sparkles className="h-3.5 w-3.5" />
-              Nouvelle app · Disponible sur Google Play
+              Avec PayFlex
             </span>
           </motion.div>
 
