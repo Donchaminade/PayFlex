@@ -36,11 +36,11 @@ export default function AboutPage() {
           <div>
             <p className="section-title">À Propos de Nous</p>
             <h2 className="mt-3 text-3xl font-bold">PayFlex : L&apos;autonomie des jeunes artisans</h2>
-            <p className="mt-4 text-slate-600 dark:text-slate-400">
+            <p className="mt-4 text-[var(--pf-muted)]">
               PayFlex est une plateforme numérique d&apos;acquisition d&apos;outils et de kits de travail, conçue
               principalement pour les jeunes apprentis et artisans.
             </p>
-            <p className="mt-4 text-slate-600 dark:text-slate-400">
+            <p className="mt-4 text-[var(--pf-muted)]">
               Au Togo, plus de 45 000 apprentis issus de 57 spécialités professionnelles terminent chaque année leur
               formation sans disposer des ressources nécessaires pour démarrer leur activité. PayFlex permet à ces jeunes
               d&apos;accéder aux équipements indispensables.

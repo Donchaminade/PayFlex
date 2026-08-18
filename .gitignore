@@ -23,3 +23,7 @@ payflex_backend/login-res*.txt
 # Kotlin compiler session cache
 **/.kotlin/sessions/
 *.salive
+
+# Vercel CLI (local link)
+.vercel
+.env.local
