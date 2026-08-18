@@ -3,6 +3,7 @@
 @tailwind utilities;
 
 :root {
+  color-scheme: light;
   --pf-primary: #0b4a9e;
   --pf-primary-soft: #2f74d0;
   --pf-primary-ink: #062a5c;
@@ -32,6 +33,7 @@
 }
 
 .dark {
+  color-scheme: dark;
   --background: #070d1a;
   --foreground: #e8eefb;
   --pf-surface: #0d1730;
@@ -108,10 +110,14 @@ body::before {
   }
 
   .nav-link {
-    @apply relative rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 transition-colors duration-200 dark:text-slate-300;
+    @apply relative rounded-lg px-3 py-2 text-sm font-semibold transition-colors duration-200;
+    color: var(--pf-muted);
   }
   .nav-link:hover {
-    @apply text-[var(--pf-primary)] dark:text-white;
+    color: var(--pf-primary);
+  }
+  .dark .nav-link:hover {
+    color: #ffffff;
   }
   .nav-link::after {
     content: "";
@@ -122,7 +128,10 @@ body::before {
     @apply scale-x-100;
   }
   .nav-link.is-active {
-    @apply text-[var(--pf-primary)] dark:text-[var(--pf-secondary)];
+    color: var(--pf-primary);
+  }
+  .dark .nav-link.is-active {
+    color: var(--pf-secondary);
   }
 
   /* Panneau du menu mobile : surface thématisée, transparent/inline en desktop */
@@ -154,10 +163,15 @@ body::before {
   }
 
   .nav-dropdown-link {
-    @apply block rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 transition-colors duration-200 dark:text-slate-300;
+    @apply block rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-200;
+    color: var(--pf-muted);
   }
   .nav-dropdown-link:hover {
-    @apply bg-slate-100 text-[var(--pf-primary)] dark:bg-white/5 dark:text-white;
+    @apply bg-slate-100 dark:bg-white/5;
+    color: var(--pf-primary);
+  }
+  .dark .nav-dropdown-link:hover {
+    color: #ffffff;
   }
   .nav-dropdown-link.is-active {
     @apply text-[var(--pf-primary)];

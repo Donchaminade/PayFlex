@@ -5,7 +5,7 @@ import { appConfig, siteConfig } from "@/lib/site-data";
 export function Topbar() {
   return (
     <div className="hidden border-b border-slate-200/70 bg-[var(--pf-surface)]/70 backdrop-blur lg:block dark:border-white/10 dark:bg-white/[0.02]">
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-2 text-xs font-medium text-slate-600 dark:text-slate-300 lg:px-8">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-2 text-xs font-medium text-[var(--foreground)] lg:px-8">
         <div className="flex items-center gap-5">
           <span className="flex items-center gap-1.5">
             <MapPin className="h-3.5 w-3.5 text-[var(--pf-primary)]" />
@@ -16,7 +16,7 @@ export function Topbar() {
             Lun – Sam · 08:00 – 19:00
           </span>
         </div>
-        <div className="flex items-center gap-5 font-semibold text-slate-800 dark:text-slate-100">
+        <div className="flex items-center gap-5 font-semibold text-[var(--foreground)]">
           <a href={`tel:${siteConfig.phone.replace(/\s/g, "")}`} className="flex items-center gap-1.5 transition hover:text-[var(--pf-primary)]">
             <Phone className="h-3.5 w-3.5" />
             {siteConfig.phoneDisplay}
