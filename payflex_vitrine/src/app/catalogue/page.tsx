@@ -43,8 +43,8 @@ export default function CataloguePage() {
                 onClick={() => setFilter(cat)}
                 className={`rounded-full px-5 py-2 text-sm font-semibold transition ${
                   filter === cat
-                    ? "bg-[var(--pf-primary)] text-white shadow-[0_12px_30px_-12px_rgba(11,74,158,0.6)]"
-                    : "border border-slate-200/70 bg-white/70 text-slate-700 hover:bg-white dark:border-white/10 dark:bg-white/5 dark:text-slate-300"
+                    ? "bg-[var(--pf-primary)] text-white shadow-[0_12px_30px_-12px_rgba(11,74,158,0.6)] hover:bg-[var(--pf-secondary)] hover:text-[#0b1f3a]"
+                    : "border border-slate-200/70 bg-white/70 text-slate-700 hover:border-transparent hover:bg-[var(--pf-secondary)] hover:text-[#0b1f3a] dark:border-white/10 dark:bg-white/5 dark:text-slate-200 dark:hover:bg-[var(--pf-secondary)] dark:hover:text-[#0b1f3a]"
                 }`}
               >
                 {cat}
