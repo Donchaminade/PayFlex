@@ -14,7 +14,9 @@ export function Footer() {
           {/* Bandeau app */}
           <div className="mb-12 flex flex-col items-start justify-between gap-6 rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur md:flex-row md:items-center md:p-8">
             <div>
-              <Image src="/img/logo.png" alt="PayFlex" width={150} height={52} className="h-11 w-auto brightness-0 invert" />
+              <div className="inline-flex items-center rounded-2xl bg-white px-3 py-2 shadow-sm">
+                <Image src="/img/logo.png" alt="PayFlex" width={160} height={56} className="h-10 w-auto object-contain" />
+              </div>
               <p className="mt-3 max-w-md text-sm text-white/70">
                 {siteConfig.tagline} — cotisation progressive pour artisans et apprentis au Togo.
               </p>

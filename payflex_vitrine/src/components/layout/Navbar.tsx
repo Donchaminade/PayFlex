@@ -51,7 +51,7 @@ export function Navbar() {
 
         <button
           type="button"
-          className="rounded-xl border border-slate-200/80 p-2.5 text-slate-700 transition hover:bg-slate-50 dark:border-white/10 dark:text-slate-200 dark:hover:bg-white/5 lg:hidden"
+          className="rounded-xl border border-slate-200/80 p-2.5 text-[var(--foreground)] transition hover:bg-slate-50 dark:border-white/10 dark:hover:bg-white/5 lg:hidden"
           onClick={() => setOpen(!open)}
           aria-label="Menu"
         >
@@ -121,7 +121,7 @@ export function Navbar() {
             <button
               type="button"
               onClick={toggleTheme}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:border-[var(--pf-primary)] hover:text-[var(--pf-primary)] dark:border-white/15 dark:text-slate-300"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-[var(--foreground)] transition hover:border-transparent hover:bg-[var(--pf-secondary)] hover:text-[#0b1f3a] dark:border-white/15"
               aria-label="Mode sombre"
             >
               {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}

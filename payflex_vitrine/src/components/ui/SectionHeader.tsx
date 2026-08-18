@@ -13,9 +13,9 @@ export function SectionHeader({ eyebrow, title, description, align = "center" }:
   return (
     <Reveal className={`mb-14 max-w-2xl ${alignClass}`}>
       <p className="section-title">{eyebrow}</p>
-      <h2 className="mt-4 text-3xl font-bold tracking-tight text-slate-900 dark:text-white md:text-4xl">{title}</h2>
+      <h2 className="mt-4 text-3xl font-bold tracking-tight text-[var(--foreground)] md:text-4xl">{title}</h2>
       {description && (
-        <p className="mt-4 text-base leading-relaxed text-slate-600 dark:text-slate-400">{description}</p>
+        <p className="mt-4 text-base leading-relaxed text-[var(--pf-muted)]">{description}</p>
       )}
     </Reveal>
   );

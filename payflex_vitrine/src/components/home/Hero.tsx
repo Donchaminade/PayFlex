@@ -5,6 +5,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowRight, ShieldCheck, Sparkles, Star, Wallet, Wrench } from "lucide-react";
 import { PlayStoreButton } from "@/components/shared/PlayStoreButton";
+import { HeroBackdrop } from "@/components/home/HeroBackdrop";
 import { appConfig } from "@/lib/site-data";
 
 const TRUST = [
@@ -18,6 +19,7 @@ const ease = [0.22, 1, 0.36, 1] as const;
 export function Hero() {
   return (
     <section className="relative overflow-hidden" data-hero>
+      <HeroBackdrop />
       {/* Décor doux */}
       <div className="pointer-events-none absolute inset-0 -z-10">
         <div className="blob animate-blob absolute -left-24 -top-24 h-96 w-96 rounded-full bg-[var(--pf-primary)]/25" />
@@ -52,7 +54,7 @@ export function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, ease, delay: 0.05 }}
-            className="mt-6 font-display text-4xl font-bold leading-[1.08] tracking-tight text-slate-900 dark:text-white sm:text-5xl lg:text-6xl"
+            className="mt-6 font-display text-4xl font-bold leading-[1.08] tracking-tight text-[var(--foreground)] sm:text-5xl lg:text-6xl"
           >
             Équipez-vous.{" "}
             <span className="accent-underline">
@@ -97,13 +99,13 @@ export function Hero() {
                   <Star key={i} className="h-4 w-4 fill-[var(--pf-secondary)] text-[var(--pf-secondary)]" />
                 ))}
               </div>
-              <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+              <p className="text-sm font-semibold text-[var(--foreground)]">
                 {appConfig.rating}
                 <span className="font-normal text-[var(--pf-muted)]"> · {appConfig.reviews} avis</span>
               </p>
             </div>
             <div className="h-8 w-px bg-slate-200 dark:bg-white/10" />
-            <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+            <p className="text-sm font-semibold text-[var(--foreground)]">
               {appConfig.downloads}
               <span className="font-normal text-[var(--pf-muted)]"> téléchargements</span>
             </p>
@@ -157,7 +159,7 @@ export function Hero() {
                 <Wallet className="h-4 w-4" />
                 <span className="text-[10px] font-bold uppercase tracking-wider">Cotisation</span>
               </div>
-              <p className="mt-2 text-2xl font-bold text-slate-900 dark:text-white">3 000 XOF</p>
+              <p className="mt-2 text-2xl font-bold text-[var(--foreground)]">3 000 XOF</p>
               <p className="text-xs text-[var(--pf-muted)]">par mois et par métier</p>
             </motion.div>
 

@@ -3,6 +3,7 @@
 @tailwind utilities;
 
 :root {
+  color-scheme: light;
   --pf-primary: #0b4a9e;
   --pf-primary-soft: #2f74d0;
   --pf-primary-ink: #062a5c;
@@ -32,6 +33,7 @@
 }
 
 .dark {
+  color-scheme: dark;
   --background: #070d1a;
   --foreground: #e8eefb;
   --pf-surface: #0d1730;
@@ -108,10 +110,14 @@ body::before {
   }
 
   .nav-link {
-    @apply relative rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 transition-colors duration-200 dark:text-slate-300;
+    @apply relative rounded-lg px-3 py-2 text-sm font-semibold transition-colors duration-200;
+    color: var(--pf-muted);
   }
   .nav-link:hover {
-    @apply text-[var(--pf-primary)] dark:text-white;
+    color: var(--pf-primary);
+  }
+  .dark .nav-link:hover {
+    color: #ffffff;
   }
   .nav-link::after {
     content: "";
@@ -122,7 +128,10 @@ body::before {
     @apply scale-x-100;
   }
   .nav-link.is-active {
-    @apply text-[var(--pf-primary)] dark:text-[var(--pf-secondary)];
+    color: var(--pf-primary);
+  }
+  .dark .nav-link.is-active {
+    color: var(--pf-secondary);
   }
 
   /* Panneau du menu mobile : surface thématisée, transparent/inline en desktop */
@@ -154,10 +163,15 @@ body::before {
   }
 
   .nav-dropdown-link {
-    @apply block rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 transition-colors duration-200 dark:text-slate-300;
+    @apply block rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-200;
+    color: var(--pf-muted);
   }
   .nav-dropdown-link:hover {
-    @apply bg-slate-100 text-[var(--pf-primary)] dark:bg-white/5 dark:text-white;
+    @apply bg-slate-100 dark:bg-white/5;
+    color: var(--pf-primary);
+  }
+  .dark .nav-dropdown-link:hover {
+    color: #ffffff;
   }
   .nav-dropdown-link.is-active {
     @apply text-[var(--pf-primary)];
@@ -165,26 +179,45 @@ body::before {
   }
 
   /* ——— Boutons ——— */
+  /* Survol unifié : or PayFlex + texte marine (jamais blanc sur blanc / or) */
   .btn-pf-primary {
     @apply inline-flex items-center justify-center gap-2 rounded-full bg-[var(--pf-primary)] px-7 py-3.5 text-sm font-bold text-white transition-all duration-300 hover:-translate-y-0.5 active:scale-[0.98];
     box-shadow: 0 12px 30px -10px rgba(11, 74, 158, 0.55);
   }
-  .btn-pf-primary:hover {
-    background-color: #083d82;
-    box-shadow: 0 16px 40px -12px rgba(11, 74, 158, 0.6);
+  .btn-pf-primary:hover,
+  .btn-pf-primary:focus-visible {
+    background-color: var(--pf-secondary);
+    color: #0b1f3a;
+    box-shadow: 0 16px 40px -12px rgba(250, 182, 45, 0.55);
   }
   .btn-pf-secondary {
-    @apply inline-flex items-center justify-center gap-2 rounded-full bg-[var(--pf-secondary)] px-7 py-3.5 text-sm font-bold text-[var(--pf-dark)] transition-all duration-300 hover:-translate-y-0.5 active:scale-[0.98];
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-[var(--pf-secondary)] px-7 py-3.5 text-sm font-bold text-[#0b1f3a] transition-all duration-300 hover:-translate-y-0.5 active:scale-[0.98];
     box-shadow: 0 12px 30px -10px rgba(250, 182, 45, 0.6);
   }
-  .btn-pf-secondary:hover {
+  .btn-pf-secondary:hover,
+  .btn-pf-secondary:focus-visible {
     background-color: var(--pf-secondary-deep);
+    color: #0b1f3a;
   }
   .btn-pf-outline {
-    @apply inline-flex items-center justify-center gap-2 rounded-full border-2 border-[rgba(11,74,158,0.28)] bg-white px-7 py-3.5 text-sm font-bold text-[var(--pf-primary-ink)] transition-all duration-300 hover:-translate-y-0.5 hover:border-[rgba(11,74,158,0.55)] dark:border-white/25 dark:bg-white/5 dark:text-white dark:hover:bg-white/10;
+    @apply inline-flex items-center justify-center gap-2 rounded-full border-2 border-[rgba(11,74,158,0.28)] bg-white px-7 py-3.5 text-sm font-bold text-[var(--pf-primary-ink)] transition-all duration-300 hover:-translate-y-0.5 dark:border-white/25 dark:bg-white/5 dark:text-white;
+  }
+  .btn-pf-outline:hover,
+  .btn-pf-outline:focus-visible,
+  .dark .btn-pf-outline:hover,
+  .dark .btn-pf-outline:focus-visible {
+    background-color: var(--pf-secondary);
+    border-color: var(--pf-secondary);
+    color: #0b1f3a;
   }
   .btn-pf-ghost {
-    @apply inline-flex items-center justify-center gap-2 rounded-full border-2 border-white/40 bg-white/10 px-7 py-3.5 text-sm font-bold text-white backdrop-blur-sm transition-all duration-300 hover:border-white/70 hover:bg-white/20;
+    @apply inline-flex items-center justify-center gap-2 rounded-full border-2 border-white/40 bg-white/10 px-7 py-3.5 text-sm font-bold text-white backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5;
+  }
+  .btn-pf-ghost:hover,
+  .btn-pf-ghost:focus-visible {
+    background-color: var(--pf-secondary);
+    border-color: var(--pf-secondary);
+    color: #0b1f3a;
   }
 
   /* ——— Bouton « Google Play » ——— */
@@ -192,8 +225,10 @@ body::before {
     @apply inline-flex items-center gap-3 rounded-2xl bg-[var(--pf-dark)] px-5 py-3 text-left text-white transition-all duration-300 hover:-translate-y-0.5;
     box-shadow: 0 16px 40px -14px rgba(11, 31, 58, 0.6);
   }
-  .btn-play:hover {
-    background-color: #0f2547;
+  .btn-play:hover,
+  .btn-play:focus-visible {
+    background-color: var(--pf-secondary);
+    color: #0b1f3a;
   }
 
   /* ——— Cartes ——— */

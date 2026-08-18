@@ -120,7 +120,7 @@ cd payflex_mobile
 flutter pub get
 ```
 
-### 4. Site vitrine (optionnel)
+### 4. Site vitrine
 
 ```powershell
 cd payflex_vitrine
@@ -128,7 +128,7 @@ npm install
 npm run dev
 ```
 
-Ouvrir http://localhost:3000
+Ouvrir http://localhost:3000 — production : https://payflex-one.vercel.app
 
 ---
 
@@ -535,8 +535,7 @@ PayFlex/
 │   │   ├── run-tunnel.ps1
 │   │   └── pull-logs.ps1
 │   └── PAYFLEX_PUSH.md
-├── payflex_vitrine/          # Site vitrine Next.js
-└── (fichiers HTML/CSS legacy à la racine — remplacés progressivement par payflex_vitrine)
+└── payflex_vitrine/          # Site vitrine Next.js (https://payflex-one.vercel.app)
 ```
 
 ---
