@@ -5,6 +5,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowRight, ShieldCheck, Sparkles, Star, Wallet, Wrench } from "lucide-react";
 import { PlayStoreButton } from "@/components/shared/PlayStoreButton";
+import { HeroBackdrop } from "@/components/home/HeroBackdrop";
 import { appConfig } from "@/lib/site-data";
 
 const TRUST = [
@@ -18,6 +19,7 @@ const ease = [0.22, 1, 0.36, 1] as const;
 export function Hero() {
   return (
     <section className="relative overflow-hidden" data-hero>
+      <HeroBackdrop />
       {/* Décor doux */}
       <div className="pointer-events-none absolute inset-0 -z-10">
         <div className="blob animate-blob absolute -left-24 -top-24 h-96 w-96 rounded-full bg-[var(--pf-primary)]/25" />
