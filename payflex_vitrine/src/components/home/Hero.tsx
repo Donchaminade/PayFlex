@@ -22,8 +22,8 @@ export function Hero() {
       <HeroBackdrop />
       {/* Décor doux */}
       <div className="pointer-events-none absolute inset-0 z-[1]">
-        <div className="blob animate-blob absolute -left-24 -top-24 h-96 w-96 rounded-full bg-[var(--pf-primary)]/20" />
-        <div className="blob animate-blob absolute -right-16 top-24 h-80 w-80 rounded-full bg-[var(--pf-secondary)]/20" />
+        <div className="blob animate-blob absolute -left-24 -top-24 h-96 w-96 rounded-full bg-[var(--pf-primary)]/25" />
+        <div className="blob animate-blob absolute -right-16 top-24 h-80 w-80 rounded-full bg-[var(--pf-secondary)]/25" />
         <div
           className="absolute inset-0 opacity-[0.04]"
           style={{

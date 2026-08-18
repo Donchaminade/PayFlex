@@ -44,8 +44,8 @@ export function HeroBackdrop() {
           />
         </div>
       ))}
-      <div className="absolute inset-0 bg-gradient-to-r from-[var(--background)]/80 via-[var(--background)]/40 to-[var(--background)]/20" />
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[var(--background)]/90" />
+      <div className="absolute inset-0 bg-[var(--background)]/55 dark:bg-[var(--background)]/70" />
+      <div className="absolute inset-0 bg-gradient-to-b from-[var(--background)]/30 via-transparent to-[var(--background)]" />
     </div>
   );
 }
