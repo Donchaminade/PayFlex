@@ -11,8 +11,8 @@ import '../../core/utils/registration_file_store.dart';
 import '../../core/utils/user_visible_message.dart';
 import '../../core/widgets/payflex_phone_field.dart';
 import '../../core/utils/phone_input_utils.dart';
+import 'widgets/auth_kit.dart';
 import 'widgets/auth_wave_background.dart';
-import 'widgets/payflex_logo.dart';
 import 'pin_setup_screen.dart';
 import 'login_screen.dart';
 import 'package:image_picker/image_picker.dart';
@@ -320,7 +320,7 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Center(
-                      child: const PayFlexLogo(size: 88),
+                      child: const PfAuthLogo(size: 76),
                     ).animate().fadeIn(duration: 400.ms),
                     const SizedBox(height: 28),
                     _buildStepIndicator(),
@@ -497,27 +497,7 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
   }
 
   InputDecoration _decor(IconData icon, String hint, {Widget? suffix}) {
-    return InputDecoration(
-      hintText: hint,
-      hintStyle: GoogleFonts.inter(color: Colors.grey.shade600),
-      prefixIcon: Icon(icon, color: AppColors.onSurfaceVariant.withValues(alpha: 0.55)),
-      suffixIcon: suffix,
-      filled: true,
-      fillColor: Colors.white,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.25)),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.25)),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: AppColors.secondary, width: 1.5),
-      ),
-      errorStyle: const TextStyle(fontSize: 11),
-    );
+    return pfAuthDecoration(hint, icon, suffix: suffix);
   }
 
   Widget _buildStep1() {
@@ -631,13 +611,7 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
             decoration: _decor(
               Icons.lock_outline_rounded,
               'Mot de passe (connexion)',
-              suffix: IconButton(
-                icon: Icon(
-                  _isPasswordVisible ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                  color: AppColors.onSurfaceVariant.withValues(alpha: 0.55),
-                ),
-                onPressed: () => setState(() => _isPasswordVisible = !_isPasswordVisible),
-              ),
+              suffix: PfEyeToggle(visible: _isPasswordVisible, onChanged: (x) => setState(() => _isPasswordVisible = x)),
             ),
             validator: (v) => (v == null || v.trim().length < 6) ? 'Au moins 6 caractères' : null,
           ),
@@ -649,13 +623,7 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
             decoration: _decor(
               Icons.lock_outline_rounded,
               'Confirmer le mot de passe',
-              suffix: IconButton(
-                icon: Icon(
-                  _isConfirmVisible ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                  color: AppColors.onSurfaceVariant.withValues(alpha: 0.55),
-                ),
-                onPressed: () => setState(() => _isConfirmVisible = !_isConfirmVisible),
-              ),
+              suffix: PfEyeToggle(visible: _isConfirmVisible, onChanged: (x) => setState(() => _isConfirmVisible = x)),
             ),
             validator: (v) => (v != _passwordCtrl.text) ? 'Les mots de passe ne correspondent pas' : null,
           ),

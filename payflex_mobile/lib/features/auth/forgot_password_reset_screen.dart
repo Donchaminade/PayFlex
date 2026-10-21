@@ -5,6 +5,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/network/mobile_api_service.dart';
 import '../../core/utils/user_visible_message.dart';
 import 'login_screen.dart';
+import 'widgets/auth_kit.dart';
 import 'widgets/auth_wave_background.dart';
 
 /// Étape 2 — Nouveau code PIN PayFlex (connexion + cotisations).
@@ -116,17 +117,7 @@ class _ForgotPasswordResetScreenState extends State<ForgotPasswordResetScreen> {
         return null;
       },
       style: GoogleFonts.inter(color: Colors.black87, fontSize: 16),
-      decoration: InputDecoration(
-        hintText: hint,
-        prefixIcon: Icon(Icons.pin_outlined, color: AppColors.onSurfaceVariant.withValues(alpha: 0.5)),
-        suffixIcon: IconButton(
-          icon: Icon(obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined),
-          onPressed: () => setVis(!obscure),
-        ),
-        filled: true,
-        fillColor: Colors.white,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-      ),
+      decoration: pfAuthDecoration(hint, obscure ? Icons.lock_rounded : Icons.lock_open_rounded, suffix: PfEyeToggle(visible: !obscure, onChanged: (v) => setVis(!v))),
     );
   }
 

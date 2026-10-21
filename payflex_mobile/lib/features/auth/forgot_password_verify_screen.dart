@@ -10,6 +10,7 @@ import '../../core/utils/user_visible_message.dart';
 import 'forgot_password_reset_screen.dart';
 import '../../core/widgets/payflex_phone_field.dart';
 import '../../core/utils/phone_input_utils.dart';
+import 'widgets/auth_kit.dart';
 import 'widgets/auth_wave_background.dart';
 
 /// Étape 1 — Vérification d’identité pour « mot de passe oublié ».
@@ -186,17 +187,7 @@ class _ForgotPasswordVerifyScreenState extends State<ForgotPasswordVerifyScreen>
       validator: validator,
       keyboardType: keyboardType,
       style: GoogleFonts.inter(color: Colors.black87, fontSize: 16),
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: GoogleFonts.inter(color: Colors.grey.shade600, fontSize: 14),
-        prefixIcon: Icon(icon, color: AppColors.onSurfaceVariant.withValues(alpha: 0.5)),
-        filled: true,
-        fillColor: Colors.white,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.2)),
-        ),
-      ),
+      decoration: pfAuthDecoration(hint, icon),
     );
   }
 

@@ -1,3 +1,5 @@
+import '../auth/widgets/auth_kit.dart';
+import '../../core/design/pf_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../core/constants/app_colors.dart';
@@ -39,9 +41,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: Pf.canvas,
       body: Stack(
         children: [
+          const Positioned.fill(child: PfAuroraBackground()),
           // Background Animated Shape
           Positioned(
             top: -100,
