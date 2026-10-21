@@ -107,6 +107,7 @@ class _AgentClientHistoryTabState extends ConsumerState<AgentClientHistoryTab> {
                               paymentModeLabel: _modeFr(mode),
                               slotsCount: 1,
                               awaitingValidation: status == 'pending',
+                              projectName: product,
                             ),
                           ),
                         ),
