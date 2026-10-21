@@ -1,18 +1,15 @@
 import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../core/constants/app_colors.dart';
 import '../../core/models/product_model.dart';
 import '../../core/providers/auth_provider.dart';
 import '../../core/providers/catalogue_provider.dart';
 import '../../core/providers/client_inbox_provider.dart';
 import '../../core/services/payflex_poll_config.dart';
 import '../../core/providers/navigation_provider.dart';
-import '../../core/widgets/count_badge.dart';
 import '../../core/widgets/offline_banner.dart';
+import '../../core/design/pf_components.dart';
 import 'cart_screen.dart';
 import 'product_detail_screen.dart';
 import '../auth/widgets/registration_feature_guard.dart';
@@ -72,512 +69,293 @@ class _CatalogueScreenState extends ConsumerState<CatalogueScreen> {
     final inbox = !widget.isAgent && auth.role == 'client' ? ref.watch(clientInboxProvider) : null;
     final showSupportChat = !widget.isAgent;
     
+    final cats = catalogue.categoryFilterOptions;
+    final selectedIdx = cats.indexOf(catalogue.selectedCategory).clamp(0, cats.isEmpty ? 0 : cats.length - 1);
+    final showFeatured = catalogue.selectedCategory == 'Tous' && catalogue.searchQuery.isEmpty && catalogue.featuredProducts.isNotEmpty;
+    final picks = catalogue.filteredProducts.where((p) => !showFeatured || p.id != catalogue.featuredProducts.first.id).toList();
+
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
-        backgroundColor: const Color(0xFFF8FAFC),
-        body: Stack(
-          children: [
-            // Décor atmosphérique
-            Positioned(
-              top: -100, right: -100,
-              child: _buildBlob(AppColors.primary, 300),
-            ),
-            Positioned(
-              bottom: -50, left: -50,
-              child: _buildBlob(AppColors.primary.withValues(alpha: 0.3), 200),
-            ),
-
-            // Contenu principal (tirer pour actualiser + polling silencieux toutes les 10 s)
-            RefreshIndicator(
-              color: AppColors.secondary,
-              onRefresh: () => ref.read(catalogueProvider.notifier).loadProducts(silent: true),
-              child: CustomScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                slivers: [
-                // AppBar
-                SliverAppBar(
-                  expandedHeight: 70,
-                  floating: true,
-                  pinned: true,
-                  elevation: 0,
-                  automaticallyImplyLeading: false,
-                  backgroundColor: Colors.white.withValues(alpha: 0.95),
-                  surfaceTintColor: Colors.transparent,
-                  title: Text(
-                    'Catalogue',
-                    style: GoogleFonts.manrope(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 18,
-                      color: AppColors.secondary,
-                    ),
+        backgroundColor: Pf.canvas,
+        body: RefreshIndicator(
+          color: Pf.ink,
+          onRefresh: () => ref.read(catalogueProvider.notifier).loadProducts(silent: true),
+          child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              SliverToBoxAdapter(
+                child: SafeArea(
+                  bottom: false,
+                  child: PfHeader(
+                    title: 'Explorer',
+                    eyebrow: 'Catalogue PayFlex',
+                    trailing: [
+                      PfCircleButton(
+                        icon: Icons.shopping_bag_outlined,
+                        semanticLabel: 'Panier',
+                        badge: catalogue.cartItemCount,
+                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CartScreen())),
+                      ),
+                      if (showSupportChat)
+                        PfCircleButton(
+                          icon: Icons.chat_bubble_outline_rounded,
+                          semanticLabel: 'Discussion support',
+                          dot: inbox != null && inbox.chatUnread > 0,
+                          onTap: () {
+                            if (!auth.canUseAppFeatures) {
+                              showRegistrationFeatureLockedSnackBar(context, 'Discussion support');
+                              return;
+                            }
+                            Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatScreen()));
+                          },
+                        ),
+                    ],
                   ),
-                  centerTitle: true,
-                  actions: [
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const CartScreen()),
-                        );
+                ),
+              ),
+
+              if (catalogue.isOffline)
+                const SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: Pf.gutter),
+                    child: OfflineBanner(margin: EdgeInsets.only(bottom: Pf.s12)),
+                  ),
+                ),
+
+              SliverToBoxAdapter(
+                child: PfReveal(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: Pf.gutter),
+                    child: PfSearchBar(
+                      controller: _searchController,
+                      hint: 'Machine, outil, kit…',
+                      onChanged: (v) {
+                        ref.read(catalogueProvider.notifier).search(v);
+                        setState(() {});
                       },
-                      child: Container(
-                        margin: const EdgeInsets.only(right: 8),
-                        child: Stack(
-                          clipBehavior: Clip.none,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(7),
-                              decoration: BoxDecoration(
-                                color: AppColors.secondary.withValues(alpha: 0.08),
-                                shape: BoxShape.circle,
-                                border: Border.all(color: AppColors.secondary.withValues(alpha: 0.15)),
-                              ),
-                              child: const Icon(Icons.shopping_bag_outlined, color: AppColors.secondary, size: 20),
-                            ),
-                            if (ref.watch(catalogueProvider).cartItemCount > 0)
-                              CountBadge(count: ref.watch(catalogueProvider).cartItemCount, top: -2, right: -2),
-                          ],
-                        ),
-                      ),
-                    ),
-                    if (showSupportChat)
-                      GestureDetector(
-                        onTap: () {
-                          if (!auth.canUseAppFeatures) {
-                            showRegistrationFeatureLockedSnackBar(context, 'Discussion support');
-                            return;
-                          }
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => const ChatScreen()),
-                          );
-                        },
-                        child: Container(
-                          margin: const EdgeInsets.only(right: 16),
-                          child: Stack(
-                            clipBehavior: Clip.none,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(7),
-                                decoration: BoxDecoration(
-                                  color: AppColors.primary.withValues(alpha: 0.1),
-                                  shape: BoxShape.circle,
-                                  border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
-                                ),
-                                child: const Icon(Icons.chat_bubble_outline_rounded, color: AppColors.secondary, size: 20),
-                              ),
-                              if (inbox != null && inbox.chatUnread > 0)
-                                CountBadge(count: inbox.chatUnread, top: -2, right: -2),
-                            ],
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-
-                if (catalogue.isOffline)
-                  const SliverToBoxAdapter(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 20),
-                      child: OfflineBanner(
-                        margin: EdgeInsets.only(top: 12),
-                      ),
+                      onClear: () {
+                        _searchController.clear();
+                        ref.read(catalogueProvider.notifier).search('');
+                        setState(() {});
+                      },
+                      onFilter: () => _showCategorySheet(context, cats),
                     ),
                   ),
+                ),
+              ),
+              const SliverToBoxAdapter(child: SizedBox(height: Pf.s8)),
+              SliverToBoxAdapter(
+                child: PfReveal(
+                  index: 1,
+                  child: PfCategoryTabs(
+                    selected: selectedIdx,
+                    items: [for (final c in cats) PfTabItem(c == 'Tous' ? 'Tout' : c, _categoryIcons[c] ?? Icons.category_rounded)],
+                    onSelected: (i) => ref.read(catalogueProvider.notifier).filterByCategory(cats[i]),
+                  ),
+                ),
+              ),
+              const SliverToBoxAdapter(child: SizedBox(height: Pf.s24)),
 
-                SliverPadding(
-                  padding: const EdgeInsets.symmetric(vertical: 24),
-                  sliver: SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Barre de recherche "Elite" Sombre (Corrigée)
-                          Container(
-                            height: 54,
-                            decoration: BoxDecoration(
-                              color: AppColors.secondary,
-                              borderRadius: BorderRadius.circular(18),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppColors.secondary.withValues(alpha: 0.3),
-                                  blurRadius: 15,
-                                  offset: const Offset(0, 8),
-                                ),
-                              ],
-                            ),
-                            child: TextField(
-                              controller: _searchController,
-                              onChanged: (v) => ref.read(catalogueProvider.notifier).search(v),
-                              style: GoogleFonts.manrope(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white),
-                              cursorColor: AppColors.primary,
-                              decoration: InputDecoration(
-                                filled: false, // Forcer à false pour éviter les fonds gris auto
-                                hintText: 'Rechercher un article ou une catégorie...',
-                                hintStyle: GoogleFonts.manrope(color: Colors.white.withValues(alpha: 0.4), fontSize: 13, fontWeight: FontWeight.w500),
-                                prefixIcon: Icon(Icons.search_rounded, color: AppColors.primary, size: 22),
-                                suffixIcon: catalogue.searchQuery.isNotEmpty
-                                  ? IconButton(
-                                      icon: const Icon(Icons.clear_rounded, color: Colors.white70, size: 18),
-                                      onPressed: () {
-                                        _searchController.clear();
-                                        ref.read(catalogueProvider.notifier).search('');
-                                      },
-                                    )
-                                  : Container(
-                                      margin: const EdgeInsets.all(10),
-                                      padding: const EdgeInsets.all(4),
-                                      decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
-                                      child: Icon(Icons.tune_rounded, size: 14, color: Colors.white.withValues(alpha: 0.6)),
-                                    ),
-                                border: InputBorder.none,
-                                enabledBorder: InputBorder.none,
-                                focusedBorder: InputBorder.none,
-                                contentPadding: const EdgeInsets.symmetric(vertical: 16),
-                              ),
-                            ),
-                          ),
-
-                          const SizedBox(height: 28),
-
-                          // Catégories
-                          SizedBox(
-                            height: 48,
-                            child: ListView.builder(
-                              scrollDirection: Axis.horizontal,
-                              itemCount: catalogue.categoryFilterOptions.length,
-                              itemBuilder: (_, i) {
-                                final cat = catalogue.categoryFilterOptions[i];
-                                final isActive = catalogue.selectedCategory == cat;
-                                return GestureDetector(
-                                  onTap: () => ref.read(catalogueProvider.notifier).filterByCategory(cat),
-                                  child: AnimatedContainer(
-                                    duration: const Duration(milliseconds: 200),
-                                    margin: const EdgeInsets.only(right: 10),
-                                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                                    decoration: BoxDecoration(
-                                      color: isActive ? AppColors.secondary : Colors.white,
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(
-                                        color: isActive ? AppColors.secondary : const Color(0xFFEDF2F7),
-                                      ),
-                                    ),
-                                    child: Center(
-                                      child: Row(
-                                        children: [
-                                          Icon(
-                                            _categoryIcons[cat] ?? Icons.category_rounded,
-                                            size: 15,
-                                            color: isActive ? Colors.white : AppColors.secondary.withValues(alpha: 0.8),
-                                          ),
-                                          const SizedBox(width: 6),
-                                          Text(
-                                            cat,
-                                            style: GoogleFonts.manrope(
-                                              color: isActive ? Colors.white : AppColors.secondary,
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 12,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-
-                          const SizedBox(height: 32),
-
-                          // Section Vedette
-                          if (catalogue.selectedCategory == 'Tous' && catalogue.searchQuery.isEmpty && catalogue.featuredProducts.isNotEmpty) ...[
-                            _buildSectionHeader('⭐ SÉLECTION VEDETTE', 'À la une'),
-                            const SizedBox(height: 16),
-                            if (catalogue.featuredProducts.length == 1)
-                              _buildFeaturedCard(context, catalogue.featuredProducts.first)
-                            else
-                              _FeaturedTicker(
+              if (catalogue.isLoading) ...[
+                const SliverToBoxAdapter(child: _CatalogueSkeleton()),
+              ] else if (catalogue.filteredProducts.isEmpty) ...[
+                SliverToBoxAdapter(
+                  child: PfEmptyState(
+                    icon: Icons.search_off_rounded,
+                    title: 'Aucun résultat',
+                    message: 'Essayez d’autres mots-clés ou une autre catégorie.',
+                    action: 'Tout afficher',
+                    onAction: () {
+                      _searchController.clear();
+                      ref.read(catalogueProvider.notifier).search('');
+                      ref.read(catalogueProvider.notifier).filterByCategory('Tous');
+                    },
+                  ),
+                ),
+              ] else ...[
+                if (showFeatured)
+                  SliverToBoxAdapter(
+                    child: PfReveal(
+                      index: 2,
+                      scale: true,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: Pf.gutter),
+                        child: catalogue.featuredProducts.length == 1
+                            ? _buildFeaturedCard(context, catalogue.featuredProducts.first)
+                            : _FeaturedTicker(
                                 products: catalogue.featuredProducts,
-                                itemBuilder: (p) => _carouselFeaturedTile(context, p),
+                                itemBuilder: (p) => _buildFeaturedCard(context, p),
                               ),
-                            const SizedBox(height: 32),
-                          ],
-
-                          // Header liste
-                          _buildSectionHeader(
-                            catalogue.filteredProducts.isEmpty ? 'AUCUN ARTICLE' : '${catalogue.filteredProducts.length} ARTICLES',
-                            catalogue.searchQuery.isNotEmpty
-                              ? 'Résultats pour "${catalogue.searchQuery}"'
-                              : catalogue.selectedCategory == 'Tous' ? 'Tous les articles' : catalogue.selectedCategory,
-                          ),
-                          const SizedBox(height: 16),
-                        ],
                       ),
                     ),
                   ),
-                ),
-
-                // Grille de produits
-                if (catalogue.isLoading)
+                if (showFeatured) const SliverToBoxAdapter(child: SizedBox(height: Pf.s32)),
+                if (picks.isNotEmpty) ...[
+                  SliverToBoxAdapter(
+                    child: PfSectionHeader(
+                      title: catalogue.searchQuery.isNotEmpty ? 'Résultats « ${catalogue.searchQuery} »' : 'Sélection de la semaine',
+                      action: '${catalogue.filteredProducts.length} articles',
+                    ),
+                  ),
+                  const SliverToBoxAdapter(child: SizedBox(height: Pf.s16)),
                   SliverToBoxAdapter(
                     child: SizedBox(
-                      height: 200,
-                      child: Center(
-                        child: CircularProgressIndicator(color: AppColors.secondary),
-                      ),
-                    ),
-                  )
-                else if (catalogue.filteredProducts.isEmpty)
-                  SliverToBoxAdapter(
-                    child: _buildEmptyState(),
-                  )
-                else
-                  SliverPadding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    sliver: SliverGrid(
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        childAspectRatio: 0.57,
-                        crossAxisSpacing: 14,
-                        mainAxisSpacing: 14,
-                      ),
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final product = catalogue.filteredProducts[index];
-                          return _buildProductCard(context, product);
-                        },
-                        childCount: catalogue.filteredProducts.length,
+                      height: 300,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        clipBehavior: Clip.none,
+                        padding: const EdgeInsets.symmetric(horizontal: Pf.gutter),
+                        itemCount: picks.length,
+                        separatorBuilder: (_, __) => const SizedBox(width: Pf.s16),
+                        itemBuilder: (context, i) => PfReveal(index: i, scale: true, child: _buildProductCard(context, picks[i])),
                       ),
                     ),
                   ),
-
-                const SliverToBoxAdapter(child: SizedBox(height: 120)),
+                  const SliverToBoxAdapter(child: SizedBox(height: Pf.s32)),
+                  const SliverToBoxAdapter(child: PfSectionHeader(title: 'Tous les articles')),
+                  const SliverToBoxAdapter(child: SizedBox(height: Pf.s12)),
+                  SliverList.builder(
+                    itemCount: catalogue.filteredProducts.length,
+                    itemBuilder: (context, i) => PfReveal(index: i, child: _buildProductRow(context, catalogue.filteredProducts[i])),
+                  ),
+                ],
               ],
-            ),
-            ),
-          ],
+              const SliverToBoxAdapter(child: SizedBox(height: 120)),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildBlob(Color color, double size) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        shape: BoxShape.circle,
-      ),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 40, sigmaY: 40),
-        child: Container(color: Colors.transparent),
-      ),
-    );
-  }
-
-  Widget _buildSectionHeader(String label, String title) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label,
-          style: GoogleFonts.manrope(
-            fontSize: 10, fontWeight: FontWeight.w900,
-            color: AppColors.primary, letterSpacing: 1.5,
-          )),
-        const SizedBox(height: 4),
-        Text(title,
-          style: GoogleFonts.manrope(
-            fontSize: 22, fontWeight: FontWeight.w800,
-            color: AppColors.secondary, letterSpacing: -0.5,
-          )),
-      ],
-    );
-  }
-
-  Widget _carouselFeaturedTile(BuildContext context, Product product) {
-    return GestureDetector(
-      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ProductDetailScreen(product: product))),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: SizedBox(
-          height: 200,
-          child: Stack(
-            fit: StackFit.expand,
+  void _showCategorySheet(BuildContext context, List<String> cats) {
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(Pf.gutter, 0, Pf.gutter, Pf.s24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Image.network(product.displayImageUrl, fit: BoxFit.cover),
-              Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [Colors.transparent, Colors.black.withValues(alpha: 0.82)],
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(14),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      product.name,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.manrope(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w800),
+              Text('Catégories', style: Pf.title()),
+              const SizedBox(height: Pf.s16),
+              Wrap(
+                spacing: Pf.s8,
+                runSpacing: Pf.s8,
+                children: [
+                  for (final c in cats)
+                    PfPillChip(
+                      label: c,
+                      icon: _categoryIcons[c],
+                      tone: ref.read(catalogueProvider).selectedCategory == c ? PfChipTone.ink : PfChipTone.white,
+                      onTap: () {
+                        ref.read(catalogueProvider.notifier).filterByCategory(c);
+                        Navigator.pop(ctx);
+                      },
                     ),
-                    Text('Dès ${product.formattedDaily}', style: GoogleFonts.inter(color: Colors.white70, fontSize: 11)),
-                  ],
-                ),
+                ],
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  void _openProduct(BuildContext context, Product product) =>
+      Navigator.push(context, MaterialPageRoute(builder: (_) => ProductDetailScreen(product: product)));
+
+  Widget _buildProductRow(BuildContext context, Product product) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(Pf.gutter, 0, Pf.gutter, Pf.s12),
+      child: PfCard(
+        padding: const EdgeInsets.all(Pf.s12),
+        onTap: () => _openProduct(context, product),
+        child: Row(
+          children: [
+            ClipRRect(
+              borderRadius: Pf.br(Pf.rMd),
+              child: SizedBox(
+                width: 72,
+                height: 72,
+                child: Image.network(product.displayImageUrl, fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Container(color: Pf.fill, child: const Icon(Icons.inventory_2_rounded, color: Pf.faint))),
+              ),
+            ),
+            const SizedBox(width: Pf.s12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(product.category.toUpperCase(), style: Pf.overline(color: Pf.faint)),
+                  const SizedBox(height: 2),
+                  Text(product.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: Pf.label(size: 15)),
+                  const SizedBox(height: Pf.s4),
+                  Text.rich(TextSpan(children: [
+                    TextSpan(text: product.formattedPrice, style: Pf.num(size: 13)),
+                    TextSpan(text: '  ·  dès ${product.formattedDaily}', style: Pf.body(size: 12)),
+                  ])),
+                ],
+              ),
+            ),
+            Container(
+              width: 36,
+              height: 36,
+              decoration: const BoxDecoration(color: Pf.ink, shape: BoxShape.circle),
+              child: const Icon(Icons.arrow_forward_rounded, size: 18, color: Colors.white),
+            ),
+          ],
         ),
       ),
     );
   }
 
   Widget _buildFeaturedCard(BuildContext context, Product product) {
-    return GestureDetector(
-      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ProductDetailScreen(product: product))),
-      child: Hero(
-        tag: 'featured_${product.id}',
-        child: Container(
-          height: 220,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(24),
-            image: DecorationImage(image: NetworkImage(product.displayImageUrl), fit: BoxFit.cover),
-            boxShadow: [
-              BoxShadow(color: AppColors.secondary.withValues(alpha: 0.2), blurRadius: 20, offset: const Offset(0, 10)),
-            ],
-          ),
-          child: Stack(
-            children: [
-              Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(24),
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter, end: Alignment.bottomCenter,
-                    colors: [Colors.transparent, Colors.black.withValues(alpha: 0.8)],
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(6)),
-                      child: Text('OFFRE ÉLITE', style: GoogleFonts.manrope(color: AppColors.secondary, fontSize: 9, fontWeight: FontWeight.w900)),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(product.name, style: GoogleFonts.manrope(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w800)),
-                    Text('Dès ${product.formattedDaily} / jour', style: GoogleFonts.inter(color: Colors.white70, fontSize: 13)),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+    return PfFeaturedCard(
+      badge: 'À LA UNE',
+      title: product.name,
+      subtitle: product.category,
+      cta: 'Dès ${product.formattedDaily}',
+      onCta: () => _openProduct(context, product),
+      onTap: () => _openProduct(context, product),
+      image: NetworkImage(product.displayImageUrl),
     );
   }
 
   Widget _buildProductCard(BuildContext context, Product product) {
-    return GestureDetector(
-      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ProductDetailScreen(product: product))),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 15, offset: const Offset(0, 8)),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Hero(
-                tag: product.id,
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-                    image: DecorationImage(image: NetworkImage(product.displayImageUrl), fit: BoxFit.cover),
-                  ),
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(product.name, maxLines: 1, overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.manrope(fontWeight: FontWeight.w800, color: AppColors.secondary, fontSize: 13)),
-                  const SizedBox(height: 2),
-                  Text(product.category, style: GoogleFonts.inter(color: Colors.grey, fontSize: 10)),
-                  const SizedBox(height: 8),
-                  Text(
-                    product.description,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.inter(
-                      color: AppColors.secondary.withValues(alpha: 0.55),
-                      fontSize: 10,
-                      height: 1.3,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(product.formattedPrice, style: GoogleFonts.manrope(fontWeight: FontWeight.w900, color: AppColors.primary, fontSize: 12)),
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 30,
-                    child: ElevatedButton(
-                      onPressed: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => ProductDetailScreen(product: product)),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.secondary,
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        padding: EdgeInsets.zero,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      ),
-                      child: Text(
-                        'Voir détail',
-                        style: GoogleFonts.manrope(fontSize: 11, fontWeight: FontWeight.w800),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ).animate().fadeIn().scale(begin: const Offset(0.95, 0.95)),
+    return PfPhotoCard(
+      image: NetworkImage(product.displayImageUrl),
+      heroTag: product.id,
+      title: product.name,
+      subtitle: '${product.category} · ${product.formattedPrice}',
+      chip: product.formattedDaily,
+      onTap: () => _openProduct(context, product),
+      width: 220,
+      height: 300,
     );
   }
+}
 
-  Widget _buildEmptyState() {
-    return Center(
+class _CatalogueSkeleton extends StatelessWidget {
+  const _CatalogueSkeleton();
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: Pf.gutter),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 60),
-          Icon(Icons.search_off_rounded, size: 80, color: Colors.grey.shade200),
-          const SizedBox(height: 16),
-          Text('Aucun résultat trouvé', style: GoogleFonts.manrope(fontWeight: FontWeight.bold, color: Colors.grey.shade400)),
-          Text('Essayez d\'autres mots clés ou catégories', style: GoogleFonts.inter(fontSize: 12, color: Colors.grey.shade400)),
+          const PfShimmer(radius: Pf.rXxl, height: 184),
+          const SizedBox(height: Pf.s32),
+          const PfShimmer(radius: 8, height: 20, width: 180),
+          const SizedBox(height: Pf.s16),
+          Row(children: const [
+            Expanded(child: PfShimmer(radius: Pf.rXl, height: 220)),
+            SizedBox(width: Pf.s16),
+            Expanded(child: PfShimmer(radius: Pf.rXl, height: 220)),
+          ]),
         ],
       ),
     );

@@ -4,6 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'payment_checkout_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../core/design/pf_components.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/database/database_service.dart';
 import '../../core/models/allocation_result.dart';
@@ -114,38 +115,23 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
     final presets = _presetAmounts(daily);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: Pf.canvas,
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
         automaticallyImplyLeading: false, // PAS de flèche retour automatique
-        title: Text(
-          'VALIDER COTISATION',
-          style: GoogleFonts.manrope(
-            fontWeight: FontWeight.w900,
-            letterSpacing: 2,
-            fontSize: 15,
-            color: AppColors.secondary,
-          ),
+        toolbarHeight: 96,
+        titleSpacing: Pf.gutter,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Valider une cotisation', style: Pf.body(size: 13, w: FontWeight.w600)),
+            const SizedBox(height: Pf.s4),
+            Text('Cotiser', style: Pf.display()),
+          ],
         ),
-        centerTitle: true,
       ),
       body: Stack(
         children: [
-          // Décor atmosphérique
-          Positioned(
-            top: 100, left: -80,
-            child: _blob(AppColors.primary, 280),
-          ).animate(onPlay: (c) => c.repeat(reverse: true))
-           .move(duration: 12.seconds, begin: const Offset(-20, -20), end: const Offset(20, 20)),
-
-          Positioned(
-            bottom: 200, right: -100,
-            child: _blob(AppColors.secondary, 320),
-          ).animate(onPlay: (c) => c.repeat(reverse: true))
-           .move(duration: 10.seconds, begin: const Offset(20, 10), end: const Offset(-20, -10)),
-
           // Contenu scrollable
           SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(24, 8, 24, 120),
@@ -168,15 +154,9 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [AppColors.secondary, Color(0xFF1A2E5A)],
-                    ),
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(color: AppColors.secondary.withOpacity(0.3), blurRadius: 20, offset: const Offset(0, 10)),
-                    ],
+                    gradient: Pf.featuredGradient,
+                    borderRadius: Pf.br(Pf.rXxl),
+                    boxShadow: Pf.shadowLift,
                   ),
                   child: Row(
                     children: [
@@ -235,19 +215,20 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                   decoration: BoxDecoration(
-                    color: AppColors.secondary, // Fond premium
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.primary.withOpacity(0.2)),
-                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10)],
+                    color: Pf.surface,
+                    borderRadius: Pf.br(Pf.rLg),
+                    border: Border.all(color: Pf.line),
+                    boxShadow: Pf.shadowSoft,
                   ),
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<String>(
                       value: _selectedProjectId != null && ids.contains(_selectedProjectId) ? _selectedProjectId : null,
                       isExpanded: true,
-                      dropdownColor: AppColors.secondary,
-                      icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.white),
-                      style: GoogleFonts.manrope(fontWeight: FontWeight.w700, color: Colors.white),
-                      hint: Text('Choisir un projet', style: GoogleFonts.manrope(color: Colors.white54)),
+                      dropdownColor: Pf.surface,
+                      borderRadius: Pf.br(Pf.rLg),
+                      icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Pf.ink),
+                      style: Pf.label(),
+                      hint: Text('Choisir un projet', style: Pf.body()),
                       items: projects
                           .map(
                             (p) {
@@ -263,7 +244,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                                         p.title,
                                         overflow: TextOverflow.ellipsis,
                                         style: TextStyle(
-                                          color: disabled ? Colors.white54 : Colors.white,
+                                          color: disabled ? Pf.faint : Pf.ink,
                                           fontWeight: FontWeight.w700,
                                         ),
                                       ),
@@ -273,13 +254,13 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                         margin: const EdgeInsets.only(left: 8),
                                         decoration: BoxDecoration(
-                                          color: Colors.white12,
+                                          color: Pf.fill,
                                           borderRadius: BorderRadius.circular(10),
                                         ),
                                         child: Text(
                                           'Objectif atteint',
                                           style: GoogleFonts.inter(
-                                            color: Colors.white70,
+                                            color: Pf.muted,
                                             fontSize: 10,
                                             fontWeight: FontWeight.w700,
                                           ),
@@ -343,14 +324,11 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                         keyboardType: TextInputType.number,
                         textAlign: TextAlign.center,
                         onChanged: (_) => setState(() {}),
-                        style: GoogleFonts.manrope(
-                          fontSize: 44, fontWeight: FontWeight.w900,
-                          color: AppColors.primary, // Montant en jaune PayFlex
-                          letterSpacing: -1,
-                        ),
+                        style: Pf.amount(size: 48, color: Pf.ink),
                         decoration: InputDecoration(
                           hintText: '0',
                           hintStyle: TextStyle(color: AppColors.secondary.withOpacity(0.1)),
+                          filled: false,
                           suffixText: 'FCFA',
                           suffixStyle: GoogleFonts.manrope(
                             fontWeight: FontWeight.w900, color: AppColors.secondary.withOpacity(0.3), fontSize: 14,
@@ -370,20 +348,19 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                             child: AnimatedContainer(
                               duration: 200.ms,
                               constraints: const BoxConstraints(minWidth: 64, minHeight: 48),
-                              alignment: Alignment.center,
                               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
                               decoration: BoxDecoration(
-                                color: isSelected ? AppColors.primary : AppColors.secondary.withOpacity(0.05),
-                                borderRadius: BorderRadius.circular(14),
+                                color: isSelected ? Pf.ink : Pf.fill,
+                                borderRadius: BorderRadius.circular(999),
                                 border: Border.all(color: isSelected ? AppColors.primary : Colors.transparent),
                               ),
                               child: Text(
                                 formatFcfa(int.parse(p)),
                                 style: GoogleFonts.manrope(
                                   fontWeight: FontWeight.w800,
-                                  color: isSelected ? AppColors.secondary : AppColors.secondary.withOpacity(0.6),
+                                  color: isSelected ? Pf.gold : Pf.ink,
                                   fontSize: 15,
-                                ),
+                                ).copyWith(fontFeatures: const [FontFeature.tabularFigures()]),
                               ),
                             ),
                           );
@@ -474,7 +451,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                 // === BOUTON CONFIRMER ===
                 SizedBox(
                   width: double.infinity,
-                  height: 64,
+                  height: 60,
                   child: ElevatedButton(
                     onPressed: (projects.isEmpty || _amountController.text.isEmpty || _isProcessing || !hasSelectable || projectLocked)
                       ? null
@@ -482,16 +459,15 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       foregroundColor: AppColors.secondary,
-                      disabledBackgroundColor: Colors.grey.shade200,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                      elevation: 8,
-                      shadowColor: AppColors.primary.withOpacity(0.4),
+                      disabledBackgroundColor: Pf.fill,
+                      shape: const StadiumBorder(),
+                      elevation: 0,
                     ),
                     child: _isProcessing
                       ? const CircularProgressIndicator(color: AppColors.secondary)
                       : Text(
-                          'CONFIRMER LE PAIEMENT',
-                          style: GoogleFonts.manrope(fontWeight: FontWeight.w900, letterSpacing: 1.5, fontSize: 15),
+                          'Confirmer le paiement',
+                          style: Pf.label(size: 16, w: FontWeight.w800),
                         ),
                   ),
                 ).animate().fadeIn(delay: 500.ms).slideY(begin: 0.2),
@@ -499,6 +475,8 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
             ],
           ),
           ),
+          // Anneau de progression pendant le traitement → écran de succès
+          if (_isProcessing) const Positioned.fill(child: _PaymentProcessingOverlay()),
         ],
       ),
     );
@@ -513,13 +491,11 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
           duration: 200.ms,
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: isSelected ? AppColors.secondary : Colors.white,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(
-              color: isSelected ? AppColors.secondary : AppColors.secondary.withOpacity(0.08),
-              width: 2,
-            ),
-            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 12)],
+            gradient: isSelected ? Pf.featuredGradient : null,
+            color: isSelected ? null : Pf.surface,
+            borderRadius: Pf.br(Pf.rLg),
+            border: Border.all(color: isSelected ? Pf.ink : Pf.line, width: 1.5),
+            boxShadow: isSelected ? Pf.shadowLift : Pf.shadowSoft,
           ),
           child: Column(
             children: [
@@ -542,22 +518,8 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
   }
 
   Widget _sectionTitle(String title) {
-    return Text(title,
-      style: GoogleFonts.manrope(
-        fontSize: 10, fontWeight: FontWeight.w900,
-        letterSpacing: 2, color: AppColors.secondary.withOpacity(0.4),
-      ));
-  }
-
-  Widget _blob(Color color, double size) {
-    return Container(
-      width: size, height: size,
-      decoration: BoxDecoration(color: color.withOpacity(0.04), shape: BoxShape.circle),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 50, sigmaY: 50),
-        child: Container(color: Colors.transparent),
-      ),
-    );
+    final t = title.toLowerCase();
+    return Text(t[0].toUpperCase() + t.substring(1), style: Pf.title(size: 17));
   }
 
   Future<void> _processPayment(BuildContext context) async {
@@ -947,6 +909,54 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
               fontWeight: FontWeight.w800,
               color: isSelected ? AppColors.secondary : AppColors.secondary.withOpacity(0.7),
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+
+class _PaymentProcessingOverlay extends StatefulWidget {
+  const _PaymentProcessingOverlay();
+  @override
+  State<_PaymentProcessingOverlay> createState() => _PaymentProcessingOverlayState();
+}
+
+class _PaymentProcessingOverlayState extends State<_PaymentProcessingOverlay> with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 1200));
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!PfMotion.reduced(context) && !_c.isAnimating) _c.repeat();
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BackdropFilter(
+      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+      child: ColoredBox(
+        color: Pf.canvas.withValues(alpha: 0.72),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              RotationTransition(
+                turns: _c,
+                child: const PfRing(value: 0.28, size: 88, stroke: 8, color: Pf.gold),
+              ),
+              const SizedBox(height: Pf.s24),
+              Text('Paiement en cours…', style: Pf.title(size: 18)),
+              const SizedBox(height: Pf.s8),
+              Text('Ne fermez pas l’application', style: Pf.body()),
+            ],
           ),
         ),
       ),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../constants/app_colors.dart';
+import '../design/pf_components.dart';
 
 class PayflexQuickAccessRow extends StatelessWidget {
   const PayflexQuickAccessRow({
@@ -57,63 +57,27 @@ class _QuickAccessButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(18),
-      elevation: 0,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(18),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: color.withValues(alpha: 0.12)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.03),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
+    return PfCard(
+      onTap: onTap,
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(color: color.withValues(alpha: 0.10), borderRadius: Pf.br(Pf.rSm)),
+            child: Icon(icon, color: color, size: 20),
           ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(icon, color: color, size: 22),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      label,
-                      style: GoogleFonts.manrope(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 14,
-                        color: AppColors.secondary,
-                      ),
-                    ),
-                    Text(
-                      subtitle,
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        color: AppColors.secondary.withValues(alpha: 0.55),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(Icons.arrow_forward_ios_rounded, size: 14, color: color.withValues(alpha: 0.7)),
-            ],
+          const SizedBox(width: Pf.s12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: Pf.label(size: 13)),
+                Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis, style: Pf.body(size: 11)),
+              ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
