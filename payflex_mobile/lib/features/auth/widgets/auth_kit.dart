@@ -351,7 +351,9 @@ class PfShakeState extends State<PfShake> with SingleTickerProviderStateMixin {
 enum PfLiquidState { idle, loading, success, error }
 
 class PfLiquidButton extends StatefulWidget {
-  const PfLiquidButton({super.key, required this.label, required this.onPressed, this.state = PfLiquidState.idle, this.icon, this.loadingLabel, this.successLabel = 'Connecté', this.errorLabel = 'Réessayez'});
+  const PfLiquidButton({super.key, required this.label, required this.onPressed, this.state = PfLiquidState.idle, this.icon, this.loadingLabel, this.successLabel = 'Connecté', this.errorLabel = 'Réessayez', this.gold = false});
+  /// Variante dorée (texte navy) pour les CTA d'accueil.
+  final bool gold;
   final String label;
   final String? loadingLabel;
   final String successLabel;
@@ -411,7 +413,8 @@ class _PfLiquidButtonState extends State<PfLiquidButton> with TickerProviderStat
       PfLiquidState.success => (widget.successLabel, Icons.check_rounded),
       PfLiquidState.error => (widget.errorLabel, Icons.refresh_rounded),
     };
-    final base = st == PfLiquidState.error ? Pf.danger : Pf.ink;
+    final base = st == PfLiquidState.error ? Pf.danger : (widget.gold ? Pf.gold : Pf.ink);
+    final fg = widget.gold && st == PfLiquidState.idle ? Pf.ink : Colors.white;
     return Semantics(
       button: true,
       label: label,
@@ -431,7 +434,10 @@ class _PfLiquidButtonState extends State<PfLiquidButton> with TickerProviderStat
             final dx = math.sin(_shake.value * math.pi * 6) * 8 * (1 - _shake.value);
             return Transform.translate(
               offset: Offset(dx, 0),
-              child: AnimatedScale(
+              child: AnimatedOpacity(
+                duration: PfMotion.quick,
+                opacity: widget.onPressed == null && st == PfLiquidState.idle ? .45 : 1,
+                child: AnimatedScale(
                 scale: _down ? .96 : 1,
                 duration: PfMotion.quick,
                 child: AnimatedContainer(
@@ -447,7 +453,7 @@ class _PfLiquidButtonState extends State<PfLiquidButton> with TickerProviderStat
                     fit: StackFit.expand,
                     children: [
                       if (st != PfLiquidState.error)
-                        CustomPaint(painter: _WavePainter(_fill.value, _wave.value, st == PfLiquidState.success ? Pf.success : Pf.gold)),
+                        CustomPaint(painter: _WavePainter(_fill.value, _wave.value, st == PfLiquidState.success ? Pf.success : (widget.gold ? Pf.ink : Pf.gold))),
                       // reflet « glass »
                       Positioned(
                         left: 0,
@@ -471,10 +477,10 @@ class _PfLiquidButtonState extends State<PfLiquidButton> with TickerProviderStat
                               if (st == PfLiquidState.loading)
                                 const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2.4, color: Colors.white)),
                               if (st == PfLiquidState.loading) const SizedBox(width: 10),
-                              Text(label, style: Pf.label(size: 15.5, color: Colors.white, w: FontWeight.w800).copyWith(letterSpacing: .2)),
+                              Text(label, style: Pf.label(size: 15.5, color: fg, w: FontWeight.w800).copyWith(letterSpacing: .2)),
                               if (icon != null) ...[
                                 const SizedBox(width: 10),
-                                Icon(icon, color: st == PfLiquidState.idle ? Pf.gold : Colors.white, size: 20),
+                                Icon(icon, color: st == PfLiquidState.idle ? (widget.gold ? Pf.ink : Pf.gold) : Colors.white, size: 20),
                               ],
                             ],
                           ),
@@ -483,6 +489,7 @@ class _PfLiquidButtonState extends State<PfLiquidButton> with TickerProviderStat
                     ],
                   ),
                 ),
+              ),
               ),
             );
           },
@@ -516,13 +523,13 @@ class _WavePainter extends CustomPainter {
 
 // ───────────────────────── Étapes de sécurité (réf. DcOUIemTImO)
 class PfSecuritySteps extends StatelessWidget {
-  const PfSecuritySteps({super.key, required this.step, this.failed = false});
+  const PfSecuritySteps({super.key, required this.step, this.failed = false, this.labels = const ['Identifiants', 'Vérification', 'Authentification']});
+  final List<String> labels;
   /// 0 = rien, 1 = identifiants validés, 2 = vérification, 3 = authentifié.
   final int step;
   final bool failed;
   @override
   Widget build(BuildContext context) {
-    const labels = ['Identifiants', 'Vérification', 'Authentification'];
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -583,3 +590,9 @@ Route<T> pfAuthSuccessRoute<T>(Widget page) => PageRouteBuilder<T>(
         return FadeTransition(opacity: c, child: ScaleTransition(scale: Tween(begin: 1.06, end: 1.0).animate(c), child: child));
       },
     );
+
+/// Entrée en cascade (fade + montée, 80 ms entre éléments) d'une liste d'enfants.
+List<Widget> pfStagger(List<Widget> children) => [
+      for (var i = 0; i < children.length; i++)
+        children[i] is SizedBox || children[i] is Spacer ? children[i] : PfReveal(index: i, dy: 20, child: children[i]),
+    ];

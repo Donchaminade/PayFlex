@@ -900,40 +900,16 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
 
   Widget _buildPrimaryActions() {
     if (_step < 2) {
-      return ElevatedButton(
-        onPressed: () {
+      return PfLiquidButton(label: 'Suivant', onPressed: () {
           if (_step == 1) {
             if (_formStep2.currentState?.validate() != true) return;
             if (!_validateStep2Files()) return;
           }
           _goNext();
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.secondary,
-          foregroundColor: Colors.white,
-          minimumSize: const Size(double.infinity, 52),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        ),
-        child: Text(
-          'Suivant',
-          style: GoogleFonts.manrope(fontWeight: FontWeight.w800, fontSize: 15),
-        ),
-      ).animate().fadeIn(delay: 100.ms);
+        }).animate().fadeIn(delay: 100.ms);
     }
 
-    return ElevatedButton(
-      onPressed: () async => _finishAndGoToPin(),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: AppColors.secondary,
-        foregroundColor: Colors.white,
-        minimumSize: const Size(double.infinity, 52),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      ),
-      child: Text(
-        'Continuer vers le code PIN',
-        style: GoogleFonts.manrope(fontWeight: FontWeight.w800, fontSize: 15),
-      ),
-    ).animate().fadeIn(delay: 100.ms);
+    return PfLiquidButton(label: 'Continuer vers le code PIN', onPressed: () async => _finishAndGoToPin(), icon: Icons.pin_rounded, state: _navigatingToPin ? PfLiquidState.loading : PfLiquidState.idle, loadingLabel: 'Préparation…').animate().fadeIn(delay: 100.ms);
   }
 
   String _basename(String path) {

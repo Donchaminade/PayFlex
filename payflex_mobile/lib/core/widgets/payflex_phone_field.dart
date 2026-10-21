@@ -4,7 +4,7 @@ import 'package:intl_phone_field/countries.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:intl_phone_field/phone_number.dart';
 
-import '../constants/app_colors.dart';
+import '../design/pf_tokens.dart';
 import '../utils/phone_input_utils.dart';
 
 /// Champ téléphone international : drapeau + indicatif pays, **Togo (+228)** par défaut.
@@ -15,6 +15,7 @@ class PayflexPhoneField extends StatefulWidget {
     super.key,
     required this.completeNumberController,
     this.hint = 'Numéro de téléphone',
+    this.label = 'Téléphone',
     this.validator,
     this.required = true,
     this.initialCountryCode = 'TG',
@@ -23,6 +24,7 @@ class PayflexPhoneField extends StatefulWidget {
 
   final TextEditingController completeNumberController;
   final String hint;
+  final String label;
   final String? Function(String?)? validator;
   final bool required;
   final String initialCountryCode;
@@ -35,6 +37,7 @@ class PayflexPhoneField extends StatefulWidget {
 class _PayflexPhoneFieldState extends State<PayflexPhoneField> {
   late final TextEditingController _nationalController;
   String _countryCode = 'TG';
+  bool _focused = false;
 
   @override
   void initState() {
@@ -120,33 +123,24 @@ class _PayflexPhoneFieldState extends State<PayflexPhoneField> {
   }
 
   InputDecoration _decoration() {
+    OutlineInputBorder ob(Color c, [double w = 1]) =>
+        OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: c, width: w));
     return InputDecoration(
+      labelText: widget.label,
       hintText: widget.hint,
-      hintStyle: GoogleFonts.inter(color: Colors.grey.shade600, fontSize: 14),
+      floatingLabelBehavior: FloatingLabelBehavior.auto,
+      labelStyle: GoogleFonts.inter(color: Pf.muted, fontSize: 14.5, fontWeight: FontWeight.w500),
+      floatingLabelStyle: GoogleFonts.manrope(color: const Color(0xFFB7791F), fontSize: 13, fontWeight: FontWeight.w700),
+      hintStyle: GoogleFonts.inter(color: Pf.faint, fontSize: 14),
       filled: true,
       fillColor: Colors.white,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.25)),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.25)),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: AppColors.secondary, width: 1.5),
-      ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Colors.redAccent),
-      ),
-      focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Colors.redAccent, width: 1.5),
-      ),
-      errorStyle: const TextStyle(fontSize: 11),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 18),
+      border: ob(Pf.line),
+      enabledBorder: ob(Pf.line),
+      focusedBorder: ob(Pf.gold, 1.8),
+      errorBorder: ob(Pf.danger),
+      focusedErrorBorder: ob(Pf.danger, 1.8),
+      errorStyle: GoogleFonts.inter(fontSize: 11.5, color: Pf.danger),
     );
   }
 
@@ -155,7 +149,24 @@ class _PayflexPhoneFieldState extends State<PayflexPhoneField> {
     final style = widget.textStyle ??
         GoogleFonts.inter(color: Colors.black87, fontSize: 15, fontWeight: FontWeight.w500);
 
-    return IntlPhoneField(
+    return Focus(
+      canRequestFocus: false,
+      skipTraversal: true,
+      onFocusChange: (v) => setState(() => _focused = v),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOutCubic,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: (_focused ? Pf.gold : Pf.ink).withValues(alpha: _focused ? .22 : .04),
+              blurRadius: _focused ? 22 : 12,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: IntlPhoneField(
       controller: _nationalController,
       initialCountryCode: _countryCode,
       languageCode: 'fr',
@@ -165,7 +176,7 @@ class _PayflexPhoneFieldState extends State<PayflexPhoneField> {
       style: style,
       dropdownTextStyle: style.copyWith(fontSize: 14),
       flagsButtonPadding: const EdgeInsets.only(left: 4, right: 4),
-      dropdownIcon: const Icon(Icons.arrow_drop_down_rounded, color: AppColors.secondary),
+      dropdownIcon: const Icon(Icons.expand_more_rounded, color: Pf.gold, size: 20),
       onCountryChanged: (country) {
         setState(() => _countryCode = country.code);
         _syncCompleteNumber(_nationalController.text);
@@ -183,6 +194,8 @@ class _PayflexPhoneFieldState extends State<PayflexPhoneField> {
         }
         return PayflexPhoneValidator.validate(complete, required: widget.required);
       },
+        ),
+      ),
     );
   }
 }

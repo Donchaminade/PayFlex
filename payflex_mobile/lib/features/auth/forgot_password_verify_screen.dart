@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/constants/app_colors.dart';
-import '../../core/design/pf_components.dart';
 import '../payment/widgets/payment_flow_stage.dart';
 import '../../core/network/mobile_api_service.dart';
 import '../../core/utils/user_visible_message.dart';
@@ -54,7 +53,7 @@ class _ForgotPasswordVerifyScreenState extends State<ForgotPasswordVerifyScreen>
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+              children: pfStagger([
                 Row(
                   children: [
                     IconButton(
@@ -64,7 +63,15 @@ class _ForgotPasswordVerifyScreenState extends State<ForgotPasswordVerifyScreen>
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                Center(
+                  child: PfAuthLogo(
+                    size: 72,
+                    lock: _verifying ? PfLockState.checking : (_liqErr ? PfLockState.error : PfLockState.locked),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                PfSecuritySteps(step: 0, failed: _liqErr, labels: const ['Identité', 'Nouveau PIN', 'Connexion']),
+                const SizedBox(height: 16),
                 Text(
                   'Récupération du compte',
                   style: GoogleFonts.manrope(
@@ -107,20 +114,7 @@ class _ForgotPasswordVerifyScreenState extends State<ForgotPasswordVerifyScreen>
                 if (_loading && !_verifying)
                   const Center(child: CircularProgressIndicator(color: AppColors.primary))
                 else ...[
-                  PfMorphButton(
-                    label: 'Vérifier mes informations',
-                    icon: Icons.verified_user_rounded,
-                    busy: _verifying,
-                    onPressed: _submit,
-                    onCollapsed: () {
-                      if (mounted && _verifying && !_stageVisible) {
-                        setState(() {
-                          _stageVisible = true;
-                          _stage = VerificationResult.pending;
-                        });
-                      }
-                    },
-                  ),
+                  PfLiquidButton(label: 'Vérifier mes informations', state: _liq, onPressed: _verifying ? null : _submit, loadingLabel: 'Vérification…', successLabel: 'Identité vérifiée', icon: Icons.verified_user_rounded),
                   const SizedBox(height: 14),
                   TextButton(
                     onPressed: _requestCallback,
@@ -135,7 +129,7 @@ class _ForgotPasswordVerifyScreenState extends State<ForgotPasswordVerifyScreen>
                   ),
                 ],
                 const SizedBox(height: 80),
-              ],
+              ]),
             ),
           ),
         ),
@@ -156,6 +150,31 @@ class _ForgotPasswordVerifyScreenState extends State<ForgotPasswordVerifyScreen>
           ),
       ],
     );
+  }
+
+  bool _liqErr = false;
+  PfLiquidState get _liq => _verifying
+      ? (_stage == VerificationResult.success ? PfLiquidState.success : PfLiquidState.loading)
+      : (_liqErr ? PfLiquidState.error : PfLiquidState.idle);
+
+  /// La vague du bouton remplit ~650 ms, puis la scène de vérification prend le relais
+  /// (elle attend la vraie réponse du serveur).
+  void _showStageSoon() {
+    Future<void>.delayed(const Duration(milliseconds: 650), () {
+      if (mounted && _verifying && !_stageVisible) {
+        setState(() {
+          _stageVisible = true;
+          _stage = VerificationResult.pending;
+        });
+      }
+    });
+  }
+
+  void _flashError() {
+    setState(() => _liqErr = true);
+    Future<void>.delayed(const Duration(milliseconds: 2500), () {
+      if (mounted) setState(() => _liqErr = false);
+    });
   }
 
   Future<void> _endStage(VerificationResult r) async {
@@ -234,7 +253,9 @@ class _ForgotPasswordVerifyScreenState extends State<ForgotPasswordVerifyScreen>
     setState(() {
       _loading = true;
       _verifying = true;
+      _liqErr = false;
     });
+    _showStageSoon();
     final outcome = await _api.requestAccountRecovery(
       phone: _phone.text,
       fullName: _fullName.text,
@@ -249,6 +270,7 @@ class _ForgotPasswordVerifyScreenState extends State<ForgotPasswordVerifyScreen>
       _verifying = false;
       if (!ok) _stageVisible = false;
     });
+    if (!ok) _flashError();
     if (ok) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute<void>(

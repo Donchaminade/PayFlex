@@ -160,8 +160,7 @@ class _RoleSelectionScreenState extends ConsumerState<RoleSelectionScreen> {
             bottom: 40,
             left: 24,
             right: 24,
-            child: ElevatedButton(
-              onPressed: _selectedRole == null 
+            child: PfLiquidButton(label: 'Continuer', onPressed: _selectedRole == null 
                 ? null 
                 : () {
                     // Sauvegarde du rôle dans le provider temporaire
@@ -172,13 +171,7 @@ class _RoleSelectionScreenState extends ConsumerState<RoleSelectionScreen> {
                       context,
                       MaterialPageRoute(builder: (context) => const RegistrationScreen()),
                     );
-                  },
-              style: ElevatedButton.styleFrom(
-                disabledBackgroundColor: Colors.grey.shade200,
-                disabledForegroundColor: Colors.grey,
-              ),
-              child: const Text('Continuer'),
-            ).animate().fadeIn(delay: 600.ms),
+                  }).animate().fadeIn(delay: 600.ms),
           ),
         ],
       ),
