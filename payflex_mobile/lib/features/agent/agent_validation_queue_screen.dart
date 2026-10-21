@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/design/pf_components.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -131,25 +132,15 @@ class _AgentValidationQueueScreenState extends ConsumerState<AgentValidationQueu
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          onPressed: () => Navigator.pop(context),
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.secondary),
-        ),
-        title: Text(
-          'Validation requise',
-          style: GoogleFonts.manrope(fontWeight: FontWeight.w800, color: AppColors.secondary, fontSize: 18),
-        ),
-        centerTitle: true,
-        actions: [
+      appBar: PfAppBar(title: 'Validation requise', actions: [
           IconButton(
             onPressed: _loadPending,
             icon: const Icon(Icons.refresh_rounded, color: AppColors.secondary),
           ),
-        ],
-      ),
+        ], leading: IconButton(
+          onPressed: () => Navigator.pop(context),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.secondary),
+        )),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _pendingRequests.isEmpty

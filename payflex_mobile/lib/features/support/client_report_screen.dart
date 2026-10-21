@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import '../../core/design/pf_components.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
@@ -74,18 +75,7 @@ class _ClientReportScreenState extends ConsumerState<ClientReportScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        title: Text(
-          'Signaler un problème',
-          style: GoogleFonts.manrope(fontWeight: FontWeight.w800, color: AppColors.secondary),
-        ),
-        backgroundColor: Colors.white,
-        foregroundColor: AppColors.secondary,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        iconTheme: const IconThemeData(color: AppColors.secondary),
-      ),
+      appBar: PfAppBar(title: 'Signaler un problème'),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [

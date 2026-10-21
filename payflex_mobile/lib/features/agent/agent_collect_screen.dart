@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/design/pf_components.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -126,19 +127,10 @@ class _AgentCollectScreenState extends ConsumerState<AgentCollectScreen> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
+      appBar: PfAppBar(title: widget.catchupMode ? 'Rattrapage cotisation' : 'Collecte de cotisations', leading: IconButton(
           onPressed: () => Navigator.pop(context),
           icon: const Icon(Icons.close_rounded, color: AppColors.secondary),
-        ),
-        title: Text(
-          widget.catchupMode ? 'Rattrapage cotisation' : 'Collecte de cotisations',
-          style: GoogleFonts.manrope(fontWeight: FontWeight.w800, color: AppColors.secondary, fontSize: 18),
-        ),
-        centerTitle: true,
-      ),
+        )),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 24),
         child: Column(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/design/pf_components.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -52,20 +53,14 @@ class AgentRegistryScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: Text('Registre des collectes', style: GoogleFonts.manrope(fontWeight: FontWeight.w800, color: AppColors.secondary)),
-        centerTitle: true,
-        actions: [
+      appBar: PfAppBar(title: 'Registre des collectes', actions: [
           IconButton(
             onPressed: () => ref.read(agentDataProvider.notifier).refresh(silent: false),
             icon: agent.isRefreshing
                 ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
                 : const Icon(Icons.refresh_rounded, color: AppColors.secondary),
           ),
-        ],
-      ),
+        ]),
       body: RefreshIndicator(
         onRefresh: () => ref.read(agentDataProvider.notifier).refresh(silent: false),
         child: items.isEmpty

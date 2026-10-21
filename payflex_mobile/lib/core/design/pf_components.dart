@@ -858,3 +858,66 @@ class _PfMorphButtonState extends State<PfMorphButton> {
     );
   }
 }
+
+/// Barre d'en-tête « Explore » : retour en bouton rond, grand titre serré,
+/// sur-titre optionnel. Remplace les AppBar classiques des écrans.
+class PfAppBar extends StatelessWidget implements PreferredSizeWidget {
+  const PfAppBar({super.key, required this.title, this.eyebrow, this.actions, this.automaticallyImplyLeading = true, this.leading, this.bottom, this.dark = false});
+  final String title;
+  final String? eyebrow;
+  final List<Widget>? actions;
+  final bool automaticallyImplyLeading;
+  final Widget? leading;
+  final PreferredSizeWidget? bottom;
+  final bool dark;
+
+  static String tidy(String t) {
+    final s = t.trim();
+    if (s.length > 3 && s == s.toUpperCase() && s.contains(RegExp(r'[A-Z]'))) {
+      final low = s.toLowerCase();
+      return low[0].toUpperCase() + low.substring(1);
+    }
+    return s;
+  }
+
+  @override
+  Size get preferredSize => Size.fromHeight(88 + (bottom?.preferredSize.height ?? 0));
+
+  @override
+  Widget build(BuildContext context) {
+    final canPop = automaticallyImplyLeading && (ModalRoute.of(context)?.canPop ?? false);
+    final fg = dark ? Colors.white : Pf.ink;
+    final lead = leading ??
+        (canPop
+            ? Padding(
+                padding: const EdgeInsets.only(left: Pf.s16),
+                child: Center(child: PfCircleButton(icon: Icons.arrow_back_rounded, semanticLabel: 'Retour', dark: dark, onTap: () => Navigator.maybePop(context))),
+              )
+            : null);
+    return AppBar(
+      toolbarHeight: 88,
+      backgroundColor: dark ? Pf.ink : Pf.canvas,
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      automaticallyImplyLeading: false,
+      leading: lead,
+      leadingWidth: lead == null ? 0 : 72,
+      titleSpacing: lead == null ? Pf.gutter : Pf.s4,
+      centerTitle: false,
+      foregroundColor: fg,
+      iconTheme: IconThemeData(color: fg),
+      actionsIconTheme: IconThemeData(color: fg),
+      bottom: bottom,
+      actions: [...?actions, const SizedBox(width: Pf.s12)],
+      title: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (eyebrow != null) Text(eyebrow!, style: Pf.body(size: 12, w: FontWeight.w600, color: dark ? Colors.white60 : Pf.muted)),
+          Text(tidy(title), maxLines: 1, overflow: TextOverflow.ellipsis, style: Pf.display(size: lead == null ? 30 : 24, color: fg)),
+        ],
+      ),
+    );
+  }
+}

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/design/pf_components.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/constants/app_colors.dart';
 
@@ -25,11 +26,7 @@ class ContributionReceiptScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        title: Text('Reçu de cotisation', style: GoogleFonts.manrope(fontWeight: FontWeight.w800)),
-        backgroundColor: Colors.white,
-        foregroundColor: AppColors.secondary,
-      ),
+      appBar: PfAppBar(title: 'Reçu de cotisation'),
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: Container(

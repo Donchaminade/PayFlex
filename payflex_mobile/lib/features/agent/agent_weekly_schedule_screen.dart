@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/design/pf_components.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -92,13 +93,7 @@ class _AgentWeeklyScheduleScreenState extends ConsumerState<AgentWeeklyScheduleS
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        title: Text('Planning hebdomadaire', style: GoogleFonts.manrope(fontWeight: FontWeight.w800, color: AppColors.secondary)),
-        backgroundColor: Colors.white,
-        foregroundColor: AppColors.secondary,
-        elevation: 0,
-        surfaceTintColor: Colors.transparent,
-      ),
+      appBar: PfAppBar(title: 'Planning hebdomadaire'),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 100),
         children: [

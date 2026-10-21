@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/design/pf_components.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/network/mobile_api_service.dart';
@@ -35,18 +36,7 @@ class _JobOffersScreenState extends State<JobOffersScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        title: Text(
-          'Offres d\'emploi PayFlex',
-          style: GoogleFonts.manrope(fontWeight: FontWeight.w800, color: AppColors.secondary),
-        ),
-        backgroundColor: Colors.white,
-        foregroundColor: AppColors.secondary,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        iconTheme: const IconThemeData(color: AppColors.secondary),
-      ),
+      appBar: PfAppBar(title: 'Offres d\'emploi PayFlex'),
       body: RefreshIndicator(
         color: AppColors.primary,
         onRefresh: _load,
