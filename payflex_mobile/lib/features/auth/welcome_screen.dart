@@ -145,23 +145,12 @@ class WelcomeScreen extends StatelessWidget {
 
                   const SizedBox(height: 14),
 
-                  ElevatedButton(
-                    onPressed: () {
+                  PfLiquidButton(label: 'Créer un compte', onPressed: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(builder: (context) => const RoleSelectionScreen()),
                       );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: const Size(double.infinity, 58),
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: AppColors.secondary,
-                      elevation: 8,
-                      shadowColor: Colors.black.withValues(alpha: 0.35),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                    ),
-                    child: const Text('CRÉER UN COMPTE'),
-                  ).animate().fadeIn(delay: 850.ms).slideY(begin: 0.15),
+                    }, gold: true, icon: Icons.person_add_alt_1_rounded).animate().fadeIn(delay: 850.ms).slideY(begin: 0.15),
                             ],
                           ),
                         ],

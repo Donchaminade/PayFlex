@@ -1,3 +1,4 @@
+import 'widgets/auth_kit.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -238,7 +239,7 @@ class _PinSetupScreenState extends ConsumerState<PinSetupScreen> {
       _submitting = true;
       _codeError = false;
     });
-    // La scène s'affiche quand le bouton a fini son morph (voir PfMorphButton.onCollapsed).
+    _showStageSoon();
 
     try {
       final result = await ref
@@ -313,6 +314,31 @@ class _PinSetupScreenState extends ConsumerState<PinSetupScreen> {
 
   /// Termine la scène : succès (coche) ou échec (croix rouge → retour à la
   /// saisie, cases rouges + secousse). N'influe pas sur la logique serveur.
+  bool _liqErr = false;
+  PfLiquidState get _liq => _submitting
+      ? (_stage == VerificationResult.success ? PfLiquidState.success : PfLiquidState.loading)
+      : (_liqErr ? PfLiquidState.error : PfLiquidState.idle);
+
+  /// La vague du bouton remplit ~650 ms, puis la scène de vérification prend le relais
+  /// (elle attend la vraie réponse du serveur).
+  void _showStageSoon() {
+    Future<void>.delayed(const Duration(milliseconds: 650), () {
+      if (mounted && _submitting && !_stageVisible) {
+        setState(() {
+          _stageVisible = true;
+          _stage ??= VerificationResult.pending;
+        });
+      }
+    });
+  }
+
+  void _flashError() {
+    setState(() => _liqErr = true);
+    Future<void>.delayed(const Duration(milliseconds: 2500), () {
+      if (mounted) setState(() => _liqErr = false);
+    });
+  }
+
   Future<void> _endStage(VerificationResult r) async {
     if (!_stageVisible) {
       // Réponse plus rapide que le morph du bouton : afficher la scène d'abord.
@@ -338,6 +364,7 @@ class _PinSetupScreenState extends ConsumerState<PinSetupScreen> {
         _codeError = true;
       });
       _codeKey.currentState?.shake();
+      _flashError();
     }
   }
 
@@ -398,27 +425,15 @@ class _PinSetupScreenState extends ConsumerState<PinSetupScreen> {
                       ],
                     ),
                   ).animate().fadeIn(duration: 600.ms),
-                  const SizedBox(height: 48),
+                  const SizedBox(height: 32),
                   Center(
-                    child: Container(
-                      width: 100,
-                      height: 120,
-                      decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.primary.withValues(alpha: 0.2),
-                            blurRadius: 20,
-                            offset: const Offset(0, 10),
-                          ),
-                        ],
-                      ),
-                      child: const Center(
-                        child: Icon(Icons.lock_rounded, color: AppColors.secondary, size: 50),
-                      ),
+                    child: PfAuthLogo(
+                      size: 88,
+                      lock: _submitting
+                          ? (_stage == VerificationResult.success ? PfLockState.unlocked : PfLockState.checking)
+                          : (_codeError ? PfLockState.error : PfLockState.locked),
                     ),
-                  ).animate().fadeIn(delay: 200.ms).scale(),
+                  ),
                   const SizedBox(height: 40),
                   Center(
                     child: Text(
@@ -469,19 +484,7 @@ class _PinSetupScreenState extends ConsumerState<PinSetupScreen> {
                     ),
                   ),
                   const SizedBox(height: 48),
-                  PfMorphButton(
-                    label: 'Terminer l\'inscription',
-                    busy: _submitting,
-                    onPressed: _submit,
-                    onCollapsed: () {
-                      if (mounted && _submitting && !_stageVisible) {
-                        setState(() {
-                          _stageVisible = true;
-                          _stage ??= VerificationResult.pending;
-                        });
-                      }
-                    },
-                  ),
+                  PfLiquidButton(label: 'Terminer l\'inscription', state: _liq, onPressed: _submitting ? null : _submit, loadingLabel: 'Création du compte…', successLabel: 'Compte créé', icon: Icons.check_circle_rounded),
                   const SizedBox(height: 120),
                 ],
               ),

@@ -104,8 +104,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 const SizedBox(height: 32),
                 
                 // Navigation Button
-                ElevatedButton(
-                  onPressed: () {
+                PfLiquidButton(label: _currentPage == _pages.length - 1 ? 'Commencer' : 'Suivant', onPressed: () {
                     if (_currentPage < _pages.length - 1) {
                       _pageController.nextPage(
                         duration: 600.ms,
@@ -116,12 +115,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
                       );
                     }
-                  },
-                  child: Text(
-                    _currentPage == _pages.length - 1 ? 'COMMENCER' : 'SUIVANT',
-                    style: const TextStyle(fontWeight: FontWeight.bold, letterSpacing: 2),
-                  ),
-                ),
+                  }, gold: true),
                 
                 const SizedBox(height: 16),
                 

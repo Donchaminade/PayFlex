@@ -117,16 +117,13 @@ class RegistrationSuccessScreen extends StatelessWidget {
               
               const Spacer(flex: 2),
               
-              ElevatedButton(
-                onPressed: () {
+              PfLiquidButton(label: 'Accéder à mon espace', onPressed: () {
                   Navigator.pushAndRemoveUntil(
                     context,
                     MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
                     (route) => false, // Efface toute la pile auth
                   );
-                },
-                child: const Text('Accéder à mon espace'),
-              ).animate().fadeIn(delay: 1.seconds).scale(),
+                }, icon: Icons.home_rounded).animate().fadeIn(delay: 1.seconds).scale(),
               
               const SizedBox(height: 120), // Space for waves
             ],

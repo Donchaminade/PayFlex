@@ -1,5 +1,5 @@
+import '../../core/design/pf_motion.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/network/mobile_api_service.dart';
@@ -24,6 +24,7 @@ class _ForgotPasswordResetScreenState extends State<ForgotPasswordResetScreen> {
   final _pin2 = TextEditingController();
   final _api = MobileApiService();
   bool _loading = false;
+  PfLiquidState _btn = PfLiquidState.idle;
   bool _obscurePin = true;
 
   @override
@@ -43,7 +44,7 @@ class _ForgotPasswordResetScreenState extends State<ForgotPasswordResetScreen> {
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+              children: pfStagger([
                 Row(
                   children: [
                     IconButton(
@@ -53,7 +54,20 @@ class _ForgotPasswordResetScreenState extends State<ForgotPasswordResetScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                Center(
+                  child: PfAuthLogo(
+                    size: 72,
+                    lock: switch (_btn) {
+                      PfLiquidState.loading => PfLockState.checking,
+                      PfLiquidState.success => PfLockState.unlocked,
+                      PfLiquidState.error => PfLockState.error,
+                      _ => PfLockState.locked,
+                    },
+                  ),
+                ),
+                const SizedBox(height: 12),
+                PfSecuritySteps(step: _btn == PfLiquidState.success ? 2 : 1, failed: _btn == PfLiquidState.error, labels: const ['Identité', 'Nouveau PIN', 'Connexion']),
+                const SizedBox(height: 16),
                 Text(
                   'Nouveau code PIN',
                   style: GoogleFonts.manrope(
@@ -77,18 +91,16 @@ class _ForgotPasswordResetScreenState extends State<ForgotPasswordResetScreen> {
                 const SizedBox(height: 12),
                 _pinField('Confirmer le code PIN', _pin2, _obscurePin, (v) => setState(() => _obscurePin = v)),
                 const SizedBox(height: 28),
-                if (_loading)
-                  const Center(child: CircularProgressIndicator(color: AppColors.primary))
-                else
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: _submit,
-                      child: Text('Enregistrer', style: GoogleFonts.manrope(fontWeight: FontWeight.w700)),
-                    ),
-                  ).animate().fadeIn(delay: 300.ms),
+                PfLiquidButton(
+                  label: 'Enregistrer',
+                  icon: Icons.lock_reset_rounded,
+                  loadingLabel: 'Mise à jour…',
+                  successLabel: 'PIN mis à jour',
+                  state: _btn,
+                  onPressed: _loading ? null : _submit,
+                ),
                 const SizedBox(height: 80),
-              ],
+              ]),
             ),
           ),
         ),
@@ -129,7 +141,10 @@ class _ForgotPasswordResetScreenState extends State<ForgotPasswordResetScreen> {
       );
       return;
     }
-    setState(() => _loading = true);
+    setState(() {
+      _loading = true;
+      _btn = PfLiquidState.loading;
+    });
     final pinTrim = _pin.text.trim();
     final err = await _api.resetAccountCredentials(
       resetToken: widget.resetToken,
@@ -137,7 +152,17 @@ class _ForgotPasswordResetScreenState extends State<ForgotPasswordResetScreen> {
       newSecretCode: pinTrim,
     );
     if (!mounted) return;
-    setState(() => _loading = false);
+    setState(() {
+      _loading = false;
+      _btn = err == null ? PfLiquidState.success : PfLiquidState.error;
+    });
+    if (err == null && !PfMotion.reduced(context)) await Future<void>.delayed(const Duration(milliseconds: 700));
+    if (!mounted) return;
+    if (err != null) {
+      Future<void>.delayed(const Duration(milliseconds: 2500), () {
+        if (mounted && _btn == PfLiquidState.error) setState(() => _btn = PfLiquidState.idle);
+      });
+    }
     if (err == null) {
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute<void>(
