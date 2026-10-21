@@ -79,6 +79,13 @@ class _DemoAuth extends AuthNotifier {
         city: 'Lomé',
         profession: 'Couturière',
       );
+
+  /// Démo : réponse simulée (1,6 s) ; code 1234 = succès, sinon refus.
+  @override
+  Future<LoginOutcome> login(String identifier, String pin, {String? loginMode}) async {
+    await Future<void>.delayed(const Duration(milliseconds: 1600));
+    return pin.trim() == '1234' ? const LoginOutcome.ok() : const LoginOutcome.fail('Identifiants incorrects.');
+  }
 }
 
 class _DemoFinance extends FinanceNotifier {

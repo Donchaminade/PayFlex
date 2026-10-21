@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/constants/app_colors.dart';
+import 'widgets/auth_kit.dart';
 import 'widgets/auth_wave_background.dart';
-import 'widgets/payflex_logo.dart';
 import '../main_navigation_screen.dart';
 
 class RegistrationSuccessScreen extends StatelessWidget {
@@ -18,7 +18,7 @@ class RegistrationSuccessScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const PayFlexLogo(size: 88),
+              const PfAuthLogo(size: 80, lock: PfLockState.unlocked),
               const Spacer(flex: 1),
               
               // Success Illustration Placeholder (Checkmark & Clipboard)

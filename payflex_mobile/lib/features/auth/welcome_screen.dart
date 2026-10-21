@@ -6,8 +6,8 @@ import '../../core/constants/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 import 'role_selection_screen.dart';
 import 'login_screen.dart';
+import 'widgets/auth_kit.dart';
 import 'widgets/auth_wave_background.dart';
-import 'widgets/payflex_logo.dart';
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
@@ -89,7 +89,7 @@ class WelcomeScreen extends StatelessWidget {
                         ),
                       ],
                     ),
-                    child: const PayFlexLogo(size: 72),
+                    child: const PfAuthLogo(size: 64),
                   ).animate().scale(duration: 600.ms, curve: Curves.easeOutBack),
                   const SizedBox(height: 8),
                   Container(

@@ -1,12 +1,14 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/constants/app_colors.dart';
 import '../main_navigation_screen.dart';
 import 'role_selection_screen.dart';
-import 'widgets/payflex_logo.dart';
 import 'widgets/auth_wave_background.dart';
+import 'widgets/auth_kit.dart';
+import 'package:flutter/services.dart';
+import '../../core/design/pf_motion.dart';
+import '../../core/design/pf_tokens.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/network/api_config.dart';
@@ -47,6 +49,33 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   bool _isPasswordVisible = false;
   bool _isLoading = false;
   bool _biometricAvailable = false;
+  PfLiquidState _btn = PfLiquidState.idle;
+  PfLockState _lock = PfLockState.locked;
+  int _step = 0;
+  final _shakeKey = GlobalKey<PfShakeState>();
+
+  void _visual(PfLiquidState b, PfLockState l, int step) {
+    if (!mounted) return;
+    setState(() {
+      _btn = b;
+      _lock = l;
+      _step = step;
+    });
+  }
+
+  Future<void> _failed() async {
+    _visual(PfLiquidState.error, PfLockState.error, 1);
+    _shakeKey.currentState?.shake();
+    await Future<void>.delayed(const Duration(milliseconds: 2500));
+    if (mounted && _btn == PfLiquidState.error) _visual(PfLiquidState.idle, PfLockState.locked, 0);
+  }
+
+  Future<void> _succeeded(BuildContext context, WidgetRef ref) async {
+    _visual(PfLiquidState.success, PfLockState.unlocked, 3);
+    if (!PfMotion.reduced(context)) await Future<void>.delayed(const Duration(milliseconds: 750));
+    if (!context.mounted) return;
+    _navigateAfterLogin(context, ref);
+  }
 
   TextStyle get _fieldStyle => GoogleFonts.inter(color: Colors.black87, fontSize: 16, fontWeight: FontWeight.w500);
 
@@ -107,144 +136,135 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Widget _buildLogo() {
-    const logo = PayFlexLogo(size: 128, circularBorder: true);
-    if (!kDebugMode) return logo;
-    return GestureDetector(
-      onLongPress: () => showDevApiSettingsSheet(context),
-      child: logo,
+    return PfAuthLogo(
+      size: 96,
+      lock: _lock,
+      onLongPress: kDebugMode ? () => showDevApiSettingsSheet(context) : null,
     );
   }
 
+  int _i = 0;
+  Widget _in(Widget w) => PfReveal(index: _i++, dy: 24, child: w);
+
   @override
   Widget build(BuildContext context) {
+    _i = 0;
     return AuthWaveBackground(
       child: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
-          padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
+          padding: const EdgeInsets.fromLTRB(Pf.gutter, 24, Pf.gutter, 32),
           child: Form(
             key: _formKey,
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SizedBox(height: 50),
-                Center(
-                  child: _buildLogo(),
-                ).animate().fadeIn(duration: 600.ms).slideY(begin: -0.2),
-                
-                const SizedBox(height: 60),
-                
-                Center(
-                  child: Text(
-                  'Bienvenue',
-                    textAlign: TextAlign.center,
-                  style: GoogleFonts.manrope(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.secondary,
+                const SizedBox(height: 16),
+                Center(child: _buildLogo()),
+                const SizedBox(height: 24),
+                _in(Text('ESPACE SÉCURISÉ', textAlign: TextAlign.center, style: Pf.overline().copyWith(letterSpacing: 2))),
+                const SizedBox(height: 8),
+                _in(Text('Bon retour 👋', textAlign: TextAlign.center, style: Pf.display(size: 32))),
+                const SizedBox(height: 6),
+                _in(Text('Connectez-vous pour gérer vos cotisations.', textAlign: TextAlign.center, style: Pf.body(size: 14))),
+                const SizedBox(height: 28),
+                _in(
+                  Container(
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 22),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: .86),
+                      borderRadius: BorderRadius.circular(28),
+                      border: Border.all(color: Colors.white),
+                      boxShadow: Pf.shadowLift,
                     ),
-                  ),
-                ).animate().fadeIn(delay: 200.ms),
-                
-                Center(
-                  child: Text(
-                  'Connectez-vous pour gérer vos actifs.',
-                    textAlign: TextAlign.center,
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    color: AppColors.onSurfaceVariant.withValues(alpha: 0.7),
-                    ),
-                  ),
-                ).animate().fadeIn(delay: 300.ms),
-                
-                const SizedBox(height: 32),
-
-                Center(child: _buildMethodSelector()),
-                const SizedBox(height: 20),
-                _buildIdentifierField(),
-                
-                const SizedBox(height: 20),
-                
-                _buildPasswordField(
-                  'Mot de passe ou code PIN',
-                  _isPasswordVisible, 
-                  _pinController,
-                  (v) => setState(() => _isPasswordVisible = v),
-                  validator: (v) => (v == null || v.isEmpty) ? 'Veuillez entrer votre mot de passe ou code PIN' : null,
-                ),
-                
-                const SizedBox(height: 12),
-                
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute<void>(builder: (_) => const ForgotPasswordVerifyScreen()),
-                      );
-                    },
-                    child: Text(
-                      'Mot de passe ou PIN oublié ?',
-                      style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ).animate().fadeIn(delay: 800.ms),
-                
-                const SizedBox(height: 40),
-                
-                _isLoading 
-                  ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
-                  : ElevatedButton(
-                        onPressed: _onLogin,
-                    child: const Text('SE CONNECTER'),
-                  ).animate().fadeIn(delay: 1.seconds).scale(),
-                
-                if (_biometricAvailable) ...[
-                  const SizedBox(height: 16),
-                  OutlinedButton.icon(
-                    onPressed: _isLoading ? null : _onBiometricLogin,
-                    icon: const Icon(Icons.fingerprint_rounded, color: AppColors.secondary),
-                    label: Text(
-                      'Connexion biométrique',
-                      style: GoogleFonts.manrope(fontWeight: FontWeight.w700, color: AppColors.secondary),
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size(double.infinity, 52),
-                      side: BorderSide(color: AppColors.secondary.withValues(alpha: 0.25)),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    ),
-                  ),
-                ],
-
-                const SizedBox(height: 32),
-                
-                Center(
-                  child: GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const RoleSelectionScreen()),
-                      );
-                    },
-                    child: RichText(
-                      text: TextSpan(
-                        text: 'Nouveau client sur PayFlex ? ',
-                        style: GoogleFonts.inter(color: AppColors.onSurfaceVariant, fontSize: 13),
+                    child: PfShake(
+                      key: _shakeKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          TextSpan(
-                            text: 'S’inscrire',
-                            style: TextStyle(
-                              color: AppColors.info,
-                              fontWeight: FontWeight.bold,
+                          _buildMethodSelector(),
+                          const SizedBox(height: 18),
+                          AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 280),
+                            transitionBuilder: (c, a) => FadeTransition(
+                              opacity: a,
+                              child: SlideTransition(position: Tween(begin: const Offset(.06, 0), end: Offset.zero).animate(a), child: c),
+                            ),
+                            child: KeyedSubtree(key: ValueKey(_method), child: PfFocusGlow(child: _buildIdentifierField())),
+                          ),
+                          const SizedBox(height: 14),
+                          PfFocusGlow(
+                            child: _buildPasswordField(
+                              'Mot de passe ou code PIN',
+                              _isPasswordVisible,
+                              _pinController,
+                              (v) => setState(() => _isPasswordVisible = v),
+                              validator: (v) => (v == null || v.isEmpty) ? 'Veuillez entrer votre mot de passe ou code PIN' : null,
                             ),
                           ),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton(
+                              onPressed: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute<void>(builder: (_) => const ForgotPasswordVerifyScreen()),
+                                );
+                              },
+                              child: Text('PIN oublié ?', style: Pf.label(size: 13, color: const Color(0xFFB7791F))),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          PfLiquidButton(
+                            label: 'Se connecter',
+                            loadingLabel: 'Vérification sécurisée…',
+                            successLabel: 'Bienvenue !',
+                            errorLabel: 'Réessayer',
+                            state: _btn,
+                            onPressed: _isLoading ? null : _onLogin,
+                          ),
+                          const SizedBox(height: 18),
+                          PfSecuritySteps(step: _step, failed: _btn == PfLiquidState.error),
                         ],
                       ),
                     ),
                   ),
-                ).animate().fadeIn(delay: 1.2.seconds),
-                
-                const SizedBox(height: 120),
+                ),
+                if (_biometricAvailable) ...[
+                  const SizedBox(height: 16),
+                  _in(
+                    OutlinedButton.icon(
+                      onPressed: _isLoading ? null : _onBiometricLogin,
+                      icon: const Icon(Icons.fingerprint_rounded, color: Pf.ink),
+                      label: Text('Connexion biométrique', style: Pf.label(size: 14)),
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size(double.infinity, 54),
+                        backgroundColor: Colors.white.withValues(alpha: .7),
+                        side: const BorderSide(color: Pf.line, width: 1.4),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                      ),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 24),
+                _in(
+                  Center(
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const RoleSelectionScreen()),
+                        );
+                      },
+                      child: RichText(
+                        text: TextSpan(
+                          text: 'Nouveau sur PayFlex ? ',
+                          style: Pf.body(size: 13.5),
+                          children: [TextSpan(text: 'Créer un compte', style: Pf.label(size: 13.5, color: Pf.ink).copyWith(decoration: TextDecoration.underline, decorationColor: Pf.gold, decorationThickness: 2))],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -254,39 +274,66 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Widget _buildMethodSelector() {
-    return SegmentedButton<_LoginMethod>(
-      segments: const [
-        ButtonSegment(
-          value: _LoginMethod.phone,
-          label: Text('Phone'),
-          icon: Icon(Icons.phone_outlined, size: 18),
-        ),
-        ButtonSegment(
-          value: _LoginMethod.name,
-          label: Text('Nom'),
-          icon: Icon(Icons.person_outline_rounded, size: 18),
-        ),
-        ButtonSegment(
-          value: _LoginMethod.email,
-          label: Text('E-mail'),
-          icon: Icon(Icons.email_outlined, size: 18),
-        ),
-      ],
-      selected: {_method},
-      onSelectionChanged: (selected) {
-        setState(() => _method = selected.first);
-      },
-      style: ButtonStyle(
-        foregroundColor: WidgetStateProperty.resolveWith((states) {
-          if (states.contains(WidgetState.selected)) return Colors.white;
-          return AppColors.secondary;
-        }),
-        backgroundColor: WidgetStateProperty.resolveWith((states) {
-          if (states.contains(WidgetState.selected)) return AppColors.secondary;
-          return Colors.white;
-        }),
+    const items = [
+      (_LoginMethod.phone, Icons.phone_iphone_rounded, 'Téléphone'),
+      (_LoginMethod.name, Icons.badge_rounded, 'Nom'),
+      (_LoginMethod.email, Icons.alternate_email_rounded, 'E-mail'),
+    ];
+    final idx = items.indexWhere((e) => e.$1 == _method);
+    return Container(
+      height: 48,
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(color: Pf.fill, borderRadius: BorderRadius.circular(16)),
+      child: LayoutBuilder(
+        builder: (_, c) {
+          final w = c.maxWidth / items.length;
+          return Stack(
+            children: [
+              AnimatedPositioned(
+                duration: PfMotion.slide,
+                curve: PfMotion.spring,
+                left: w * idx,
+                top: 0,
+                bottom: 0,
+                width: w,
+                child: Container(decoration: BoxDecoration(color: Pf.ink, borderRadius: BorderRadius.circular(12), boxShadow: Pf.shadowSoft)),
+              ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (final it in items)
+                    Expanded(
+                      child: Semantics(
+                        button: true,
+                        selected: it.$1 == _method,
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () {
+                            HapticFeedback.selectionClick();
+                            setState(() => _method = it.$1);
+                          },
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(it.$2, size: 16, color: it.$1 == _method ? Pf.gold : Pf.muted),
+                              const SizedBox(width: 6),
+                              AnimatedDefaultTextStyle(
+                                duration: PfMotion.quick,
+                                style: Pf.label(size: 12.5, color: it.$1 == _method ? Colors.white : Pf.muted),
+                                child: Text(it.$3),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          );
+        },
       ),
-    ).animate().fadeIn(delay: 400.ms);
+    );
   }
 
   Widget _buildIdentifierField() {
@@ -297,7 +344,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           hint: 'Ex. 90000000',
           textStyle: _fieldStyle,
           validator: (v) => PayflexPhoneValidator.validate(v),
-        ).animate().fadeIn(delay: 500.ms).slideX(begin: 0.05);
+        );
       case _LoginMethod.name:
         return _buildField(
           Icons.badge_outlined,
@@ -367,7 +414,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _onLogin() async {
-    if (_formKey.currentState!.validate()) {
+    if (!_formKey.currentState!.validate()) {
+      _shakeKey.currentState?.shake();
+      return;
+    }
+    {
       final String identifier = _buildIdentifier();
       final String pin = _pinController.text.trim();
       final String mode = _loginModeParam();
@@ -376,12 +427,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         'api=${ApiConfig.baseUrl}',
       );
       setState(() => _isLoading = true);
+      _visual(PfLiquidState.loading, PfLockState.checking, 1);
+      Future<void>.delayed(const Duration(milliseconds: 500), () {
+        if (mounted && _btn == PfLiquidState.loading) setState(() => _step = 2);
+      });
       try {
         final outcome = await ref.read(authProvider.notifier).login(identifier, pin, loginMode: mode);
         if (!context.mounted) return;
         if (outcome.success && ref.read(authProvider).isAuthenticated) {
-          _navigateAfterLogin(context, ref);
-        } else if (outcome.success) {
+          await _succeeded(context, ref);
+          return;
+        }
+        _failed();
+        if (outcome.success) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Connexion incomplète. Réessayez.'),
@@ -404,7 +462,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           );
         }
       } finally {
-        if (context.mounted) {
+        if (mounted) {
           setState(() => _isLoading = false);
         }
       }
@@ -421,7 +479,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         ? const AgentMainNavigationScreen()
         : const MainNavigationScreen();
     Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
-      MaterialPageRoute<void>(builder: (_) => nextScreen),
+      pfAuthSuccessRoute<void>(nextScreen),
       (_) => false,
     );
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -444,23 +502,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       textCapitalization: textCapitalization,
       autocorrect: false,
       style: _fieldStyle,
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: GoogleFonts.inter(color: Colors.grey.shade600, fontSize: 15),
-        prefixIcon: Icon(icon, color: AppColors.onSurfaceVariant.withValues(alpha: 0.5)),
-        filled: true,
-        fillColor: Colors.white,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.2)),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.2)),
-        ),
-        errorStyle: const TextStyle(fontSize: 10),
-      ),
-    ).animate().fadeIn(delay: 500.ms).slideX(begin: 0.05);
+      decoration: pfAuthDecoration(hint, icon),
+    );
   }
 
   Widget _buildPasswordField(String hint, bool isVisible, TextEditingController controller, Function(bool) toggle, {String? Function(String?)? validator}) {
@@ -469,29 +512,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       obscureText: !isVisible,
       validator: validator,
       style: _fieldStyle,
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: GoogleFonts.inter(color: Colors.grey.shade600, fontSize: 15),
-        prefixIcon: Icon(Icons.lock_outline_rounded, color: AppColors.onSurfaceVariant.withValues(alpha: 0.5)),
-        suffixIcon: IconButton(
-          icon: Icon(
-            isVisible ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-            color: AppColors.onSurfaceVariant.withValues(alpha: 0.5),
-          ),
-          onPressed: () => toggle(!isVisible),
-        ),
-        filled: true,
-        fillColor: Colors.white,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.2)),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.2)),
-        ),
-        errorStyle: const TextStyle(fontSize: 10),
+      decoration: pfAuthDecoration(
+        hint,
+        isVisible ? Icons.lock_open_rounded : Icons.lock_rounded,
+        suffix: PfEyeToggle(visible: isVisible, onChanged: (v) => toggle(v)),
       ),
-    ).animate().fadeIn(delay: 600.ms).slideX(begin: 0.05);
+    );
   }
 }

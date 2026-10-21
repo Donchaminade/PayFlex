@@ -1,3 +1,5 @@
+import 'widgets/auth_kit.dart';
+import '../../core/design/pf_tokens.dart';
 import 'package:flutter/material.dart';
 import '../../core/design/pf_components.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -44,13 +46,14 @@ class _RoleSelectionScreenState extends ConsumerState<RoleSelectionScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 250, 246, 246),
+      backgroundColor: Pf.canvas,
       appBar: PfAppBar(title: 'Quel est votre profil ?', leading: IconButton(
           onPressed: () => Navigator.pop(context),
           icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
         )),
       body: Stack(
         children: [
+          const Positioned.fill(child: PfAuroraBackground()),
           Padding(
             padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
             child: Column(
