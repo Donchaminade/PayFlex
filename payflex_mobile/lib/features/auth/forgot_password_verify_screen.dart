@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/design/pf_components.dart';
+import '../payment/widgets/payment_flow_stage.dart';
 import '../../core/network/mobile_api_service.dart';
 import '../../core/utils/user_visible_message.dart';
 import 'forgot_password_reset_screen.dart';
@@ -24,6 +27,11 @@ class _ForgotPasswordVerifyScreenState extends State<ForgotPasswordVerifyScreen>
   final _uniqueCode = TextEditingController();
   final _api = MobileApiService();
   bool _loading = false;
+  /// Scène de vérification d'identité (réf. Checkout v3).
+  bool _verifying = false;
+  VerificationResult _stage = VerificationResult.pending;
+  bool _stageVisible = false;
+  Completer<void>? _stageDone;
 
   @override
   void dispose() {
@@ -35,7 +43,9 @@ class _ForgotPasswordVerifyScreenState extends State<ForgotPasswordVerifyScreen>
 
   @override
   Widget build(BuildContext context) {
-    return AuthWaveBackground(
+    return Stack(
+      children: [
+        AuthWaveBackground(
       child: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
@@ -93,16 +103,23 @@ class _ForgotPasswordVerifyScreenState extends State<ForgotPasswordVerifyScreen>
                   (v) => (v == null || v.trim().isEmpty) ? 'Champ requis' : null,
                 ),
                 const SizedBox(height: 28),
-                if (_loading)
+                if (_loading && !_verifying)
                   const Center(child: CircularProgressIndicator(color: AppColors.primary))
                 else ...[
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: _submit,
-                      child: Text('Vérifier mes informations', style: GoogleFonts.manrope(fontWeight: FontWeight.w700)),
-                    ),
-                  ).animate().fadeIn(delay: 400.ms),
+                  PfMorphButton(
+                    label: 'Vérifier mes informations',
+                    icon: Icons.verified_user_rounded,
+                    busy: _verifying,
+                    onPressed: _submit,
+                    onCollapsed: () {
+                      if (mounted && _verifying && !_stageVisible) {
+                        setState(() {
+                          _stageVisible = true;
+                          _stage = VerificationResult.pending;
+                        });
+                      }
+                    },
+                  ),
                   const SizedBox(height: 14),
                   TextButton(
                     onPressed: _requestCallback,
@@ -122,7 +139,39 @@ class _ForgotPasswordVerifyScreenState extends State<ForgotPasswordVerifyScreen>
           ),
         ),
       ),
+    ),
+        if (_stageVisible)
+          Positioned.fill(
+            child: CodeVerificationOverlay(
+              result: _stage,
+              pendingLabel: 'Vérification de votre identité',
+              successLabel: 'Identité confirmée',
+              failureLabel: 'Informations non reconnues',
+              onFinished: () {
+                final c = _stageDone;
+                if (c != null && !c.isCompleted) c.complete();
+              },
+            ),
+          ),
+      ],
     );
+  }
+
+  Future<void> _endStage(VerificationResult r) async {
+    if (!_stageVisible) {
+      setState(() {
+        _stageVisible = true;
+        _stage = VerificationResult.pending;
+      });
+      await Future.delayed(const Duration(milliseconds: 350));
+      if (!mounted) return;
+    }
+    final done = Completer<void>();
+    setState(() {
+      _stage = r;
+      _stageDone = done;
+    });
+    await done.future.timeout(const Duration(seconds: 3), onTimeout: () {});
   }
 
   Widget _field(
@@ -191,15 +240,25 @@ class _ForgotPasswordVerifyScreenState extends State<ForgotPasswordVerifyScreen>
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    setState(() => _loading = true);
+    setState(() {
+      _loading = true;
+      _verifying = true;
+    });
     final outcome = await _api.requestAccountRecovery(
       phone: _phone.text,
       fullName: _fullName.text,
       uniqueCode: _uniqueCode.text,
     );
     if (!mounted) return;
-    setState(() => _loading = false);
-    if (outcome.ok && outcome.resetToken != null) {
+    final ok = outcome.ok && outcome.resetToken != null;
+    await _endStage(ok ? VerificationResult.success : VerificationResult.failure);
+    if (!mounted) return;
+    setState(() {
+      _loading = false;
+      _verifying = false;
+      if (!ok) _stageVisible = false;
+    });
+    if (ok) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute<void>(
           builder: (_) => ForgotPasswordResetScreen(resetToken: outcome.resetToken!),
