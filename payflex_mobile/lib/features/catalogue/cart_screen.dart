@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/design/pf_components.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -21,20 +22,7 @@ class CartScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        surfaceTintColor: Colors.transparent,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.secondary),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          'Mon Panier',
-          style: GoogleFonts.manrope(fontWeight: FontWeight.w800, color: AppColors.secondary, fontSize: 18),
-        ),
-        centerTitle: true,
-        actions: [
+      appBar: PfAppBar(title: 'Mon Panier', actions: [
           if (cart.isNotEmpty)
             TextButton(
               onPressed: () {
@@ -63,8 +51,10 @@ class CartScreen extends ConsumerWidget {
               },
               child: Text('Vider', style: GoogleFonts.manrope(color: Colors.red.shade400, fontSize: 13)),
             ),
-        ],
-      ),
+        ], leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.secondary),
+          onPressed: () => Navigator.pop(context),
+        )),
       body: cart.isEmpty
           ? Center(
               child: Column(

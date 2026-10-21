@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import '../../core/design/pf_components.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -48,7 +49,7 @@ class _DashboardProjectDetailScreenState extends State<DashboardProjectDetailScr
     if (_loading) {
       return Scaffold(
         backgroundColor: const Color(0xFFF8FAFC),
-        appBar: AppBar(title: const Text('Projet'), backgroundColor: Colors.transparent),
+        appBar: PfAppBar(title: 'Projet'),
         body: const Center(child: CircularProgressIndicator(color: AppColors.primary)),
       );
     }
@@ -56,7 +57,7 @@ class _DashboardProjectDetailScreenState extends State<DashboardProjectDetailScr
     if (_project == null) {
       return Scaffold(
         backgroundColor: const Color(0xFFF8FAFC),
-        appBar: AppBar(title: const Text('Projet'), backgroundColor: Colors.transparent),
+        appBar: PfAppBar(title: 'Projet'),
         body: Center(
           child: Text('Projet introuvable.', style: GoogleFonts.manrope(fontWeight: FontWeight.w700)),
         ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/design/pf_components.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import '../../core/constants/app_colors.dart';
@@ -217,24 +218,7 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: AppColors.secondary,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        title: Text(
-          'Paiement sécurisé',
-          style: GoogleFonts.manrope(fontWeight: FontWeight.w800, fontSize: 17),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.close_rounded),
-          onPressed: _checking
-              ? null
-              : () => Navigator.pop(
-                    context,
-                    const PaymentCheckoutResult(PaymentCheckoutOutcome.cancelled),
-                  ),
-        ),
-        actions: [
+      appBar: PfAppBar(title: 'Paiement sécurisé', actions: [
           TextButton(
             onPressed: _checking ? null : () => _verifyAndClose(),
             child: Text(
@@ -245,8 +229,15 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
               ),
             ),
           ),
-        ],
-      ),
+        ], leading: IconButton(
+          icon: const Icon(Icons.close_rounded),
+          onPressed: _checking
+              ? null
+              : () => Navigator.pop(
+                    context,
+                    const PaymentCheckoutResult(PaymentCheckoutOutcome.cancelled),
+                  ),
+        )),
       body: Column(
         children: [
           Container(

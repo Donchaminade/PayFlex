@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/design/pf_components.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/constants/app_colors.dart';
@@ -40,11 +41,7 @@ class _ContributionConfigScreenState extends ConsumerState<ContributionConfigScr
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        title: Text('Rythme de cotisation', style: GoogleFonts.manrope(fontWeight: FontWeight.w800)),
-        backgroundColor: Colors.white,
-        foregroundColor: AppColors.secondary,
-      ),
+      appBar: PfAppBar(title: 'Rythme de cotisation'),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/design/pf_components.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/constants/app_colors.dart';
@@ -79,15 +80,7 @@ class _AgentClientListScreenState extends ConsumerState<AgentClientListScreen> {
     final filtered = _filteredClients(agent.clients);
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: Text(
-          'Mes clients',
-          style: GoogleFonts.manrope(fontWeight: FontWeight.w800, color: AppColors.secondary, fontSize: 18),
-        ),
-        centerTitle: true,
-      ),
+      appBar: PfAppBar(title: 'Mes clients'),
       body: Column(
         children: [
           Padding(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/design/pf_components.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/constants/app_colors.dart';
@@ -44,24 +45,10 @@ class _RoleSelectionScreenState extends ConsumerState<RoleSelectionScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 250, 246, 246),
-      appBar: AppBar(
-        backgroundColor: AppColors.secondary,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
+      appBar: PfAppBar(title: 'Quel est votre profil ?', leading: IconButton(
           onPressed: () => Navigator.pop(context),
           icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
-        ),
-        title: Text(
-          'Quel est votre profil ?',
-          style: GoogleFonts.manrope(
-            fontWeight: FontWeight.w800,
-            color: Colors.white,
-            fontSize: 18,
-          ),
-        ),
-        centerTitle: true,
-      ),
+        )),
       body: Stack(
         children: [
           Padding(

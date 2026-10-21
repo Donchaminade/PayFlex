@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/design/pf_components.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/constants/app_colors.dart';
@@ -58,18 +59,7 @@ class _JobOfferDetailScreenState extends State<JobOfferDetailScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        title: Text(
-          'Détail de l\'offre',
-          style: GoogleFonts.manrope(fontWeight: FontWeight.w800, color: AppColors.secondary),
-        ),
-        backgroundColor: Colors.white,
-        foregroundColor: AppColors.secondary,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        iconTheme: const IconThemeData(color: AppColors.secondary),
-      ),
+      appBar: PfAppBar(title: 'Détail de l\'offre'),
       body: _loading
           ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
           : _error != null

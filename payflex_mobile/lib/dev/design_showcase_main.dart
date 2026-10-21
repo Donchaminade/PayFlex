@@ -14,6 +14,39 @@ import '../core/providers/finance_provider.dart';
 import '../core/providers/navigation_provider.dart';
 import '../core/theme/app_theme.dart';
 import '../features/auth/login_screen.dart';
+import '../features/auth/welcome_screen.dart';
+import '../features/auth/role_selection_screen.dart';
+import '../features/auth/registration_screen.dart';
+import '../features/auth/registration_success_screen.dart';
+import '../features/auth/pin_setup_screen.dart';
+import '../features/auth/forgot_password_verify_screen.dart';
+import '../features/auth/forgot_password_reset_screen.dart';
+import '../features/onboarding/onboarding_screen.dart';
+import '../features/catalogue/cart_screen.dart';
+import '../features/catalogue/contribution_config_screen.dart';
+import '../features/chat/chat_screen.dart';
+import '../features/chat/custom_request_screen.dart';
+import '../features/notifications/client_notifications_screen.dart';
+import '../features/profile/profile_screen.dart';
+import '../features/profile/profile_edit_screen.dart';
+import '../features/profile/notification_preferences_screen.dart';
+import '../features/profile/privacy_policy_screen.dart';
+import '../features/support/client_report_screen.dart';
+import '../features/vitrine/job_offers_screen.dart';
+import '../features/dashboard/dashboard_project_detail_screen.dart';
+import '../features/history/gap_fill_screen.dart';
+import '../features/payment/adhesion_payment_screen.dart';
+import '../features/payment/contribution_receipt_screen.dart';
+import '../features/agent/agent_main_navigation_screen.dart';
+import '../features/agent/agent_client_list_screen.dart';
+import '../features/agent/agent_validation_queue_screen.dart';
+import '../features/agent/agent_zone_tour_screen.dart';
+import '../features/agent/agent_weekly_schedule_screen.dart';
+import '../features/agent/agent_registry_screen.dart';
+import '../features/agent/agent_profile_screen.dart';
+import '../features/agent/agent_change_pin_screen.dart';
+import '../features/agent/agent_enrollment_screen.dart';
+import '../features/agent/agent_client_detail_screen.dart';
 import 'checkout_flow_demo.dart';
 import 'otp_flow_demo.dart';
 import '../features/payment/widgets/payment_flow_stage.dart';
@@ -38,8 +71,8 @@ class _DemoAuth extends AuthNotifier {
         userId: 7,
         name: 'Ama Kossiwa Mensah',
         phone: '+228 90 12 34 56',
-        role: 'client',
-        accountStatus: 'adhere',
+        role: Uri.base.queryParameters['role'] ?? 'client',
+        accountStatus: (Uri.base.queryParameters['role'] == 'agent') ? 'valide' : 'adhere',
         isAdherent: true,
         adhesionFeePaid: true,
         assignedAgentName: 'Koffi A.',
@@ -122,6 +155,40 @@ class _ShowcaseApp extends ConsumerWidget {
     final Widget home = switch (screen) {
       'product' => ProductDetailScreen(product: demoProducts.first),
       'login' => const LoginScreen(),
+      'welcome' => const WelcomeScreen(),
+      'onboarding' => const OnboardingScreen(),
+      'role' => const RoleSelectionScreen(),
+      'register' => const RegistrationScreen(),
+      'register-ok' => const RegistrationSuccessScreen(),
+      'pin' => const PinSetupScreen(),
+      'forgot' => const ForgotPasswordVerifyScreen(),
+      'forgot-reset' => const ForgotPasswordResetScreen(resetToken: 'demo'),
+      'cart' => const CartScreen(),
+      'contrib-config' => const ContributionConfigScreen(),
+      'chat' => const ChatScreen(),
+      'custom-request' => const CustomRequestScreen(),
+      'notifications' => const ClientNotificationsScreen(),
+      'profile' => const ProfileScreen(),
+      'profile-edit' => const ProfileEditScreen(),
+      'notif-prefs' => const NotificationPreferencesScreen(),
+      'privacy' => const PrivacyPolicyScreen(),
+      'report' => const ClientReportScreen(),
+      'jobs' => const JobOffersScreen(),
+      'project' => const DashboardProjectDetailScreen(projectId: '1'),
+      'gap-fill' => const GapFillScreen(),
+      'adhesion' => const AdhesionPaymentScreen(),
+      'receipt' => ContributionReceiptScreen(amount: 1300, reference: 'PF-1761036000', paidAt: DateTime(2026, 10, 21, 9, 12), paymentModeLabel: 'Payé via T-Money', slotsCount: 2),
+      'agent' => const AgentMainNavigationScreen(),
+      'agent-clients' => const AgentClientListScreen(),
+      'agent-queue' => const AgentValidationQueueScreen(),
+      'agent-tour' => const AgentZoneTourScreen(),
+      'agent-week' => const AgentWeeklyScheduleScreen(),
+      'agent-registry' => const AgentRegistryScreen(),
+      'agent-profile' => const AgentProfileScreen(),
+      'agent-pin' => const AgentChangePinScreen(),
+      'agent-enroll' => const AgentEnrollmentScreen(),
+      'agent-client' => const AgentClientDetailScreen(clientId: 7, name: 'Ama Kossiwa Mensah', zone: 'Bè-Kpota'),
+
       'checkout' => const CheckoutFlowDemo(),
       'otp' => const OtpFlowDemo(),
       'verifying' => const Scaffold(body: PaymentVerifyingOverlay()),

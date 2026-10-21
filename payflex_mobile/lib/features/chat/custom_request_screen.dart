@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/design/pf_components.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -97,18 +98,10 @@ class _CustomRequestScreenState extends State<CustomRequestScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        surfaceTintColor: Colors.transparent,
-        leading: IconButton(
+      appBar: PfAppBar(title: 'Demande Spéciale', leading: IconButton(
           icon: const Icon(Icons.close_rounded, color: AppColors.secondary),
           onPressed: () => Navigator.pop(context),
-        ),
-        title: Text('Demande Spéciale',
-          style: GoogleFonts.manrope(fontWeight: FontWeight.w800, color: AppColors.secondary, fontSize: 18)),
-        centerTitle: true,
-      ),
+        )),
       body: Consumer(
         builder: (context, ref, child) => SingleChildScrollView(
           padding: const EdgeInsets.all(24),

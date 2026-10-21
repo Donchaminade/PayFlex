@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/design/pf_components.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -52,13 +53,7 @@ class _AgentZoneTourScreenState extends ConsumerState<AgentZoneTourScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        title: Text('Zones de collecte', style: GoogleFonts.manrope(fontWeight: FontWeight.w800, color: AppColors.secondary)),
-        backgroundColor: Colors.white,
-        foregroundColor: AppColors.secondary,
-        elevation: 0,
-        surfaceTintColor: Colors.transparent,
-      ),
+      appBar: PfAppBar(title: 'Zones de collecte'),
       body: _loading
           ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
           : RefreshIndicator(

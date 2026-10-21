@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/design/pf_components.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -339,19 +340,7 @@ class _ClientNotificationsScreenState extends ConsumerState<ClientNotificationsS
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: Text(
-          screenTitle,
-          style: GoogleFonts.manrope(
-            fontWeight: FontWeight.w800,
-            color: AppColors.secondary,
-            fontSize: 18,
-          ),
-        ),
-        centerTitle: true,
-        actions: [
+      appBar: PfAppBar(title: screenTitle, actions: [
           if (notif.unreadCount > 0)
             TextButton(
               onPressed: () async {
@@ -366,8 +355,7 @@ class _ClientNotificationsScreenState extends ConsumerState<ClientNotificationsS
                 ),
               ),
             ),
-        ],
-      ),
+        ]),
       body: notif.isLoading
           ? const Center(child: CircularProgressIndicator())
           : notif.items.isEmpty

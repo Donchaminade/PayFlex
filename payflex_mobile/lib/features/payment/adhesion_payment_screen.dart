@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/design/pf_components.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/constants/app_colors.dart';
@@ -95,15 +96,7 @@ class _AdhesionPaymentScreenState extends ConsumerState<AdhesionPaymentScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        title: Text(
-          'Adhésion PayFlex',
-          style: GoogleFonts.manrope(fontWeight: FontWeight.w800, fontSize: 17),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        foregroundColor: AppColors.secondary,
-      ),
+      appBar: PfAppBar(title: 'Adhésion PayFlex'),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
