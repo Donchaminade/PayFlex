@@ -293,3 +293,130 @@ class _SparklePainter extends CustomPainter {
   @override
   bool shouldRepaint(_SparklePainter o) => o.t != t;
 }
+
+/// Résultat de vérification pour [CodeVerificationOverlay].
+enum VerificationResult { pending, success, failure }
+
+/// Scène de vérification générique (PIN, code, identité) :
+/// - pending : progression asymptotique (≤ 88 %) tant que le serveur n'a pas répondu ;
+/// - success : 100 % puis cadenas → coche verte, puis [onFinished] ;
+/// - failure : arc rouge + croix, fondu de sortie puis [onFinished]
+///   (l'écran revient à la saisie et secoue les cases).
+class CodeVerificationOverlay extends StatefulWidget {
+  const CodeVerificationOverlay({
+    super.key,
+    required this.result,
+    this.pendingLabel = 'Vérification du code',
+    this.successLabel = 'Code vérifié',
+    this.failureLabel = 'Vérification refusée',
+    this.onFinished,
+  });
+
+  final VerificationResult result;
+  final String pendingLabel;
+  final String successLabel;
+  final String failureLabel;
+  final VoidCallback? onFinished;
+
+  @override
+  State<CodeVerificationOverlay> createState() => _CodeVerificationOverlayState();
+}
+
+class _CodeVerificationOverlayState extends State<CodeVerificationOverlay> with TickerProviderStateMixin {
+  late final AnimationController _enter = AnimationController(vsync: this, duration: const Duration(milliseconds: 600));
+  late final AnimationController _clock = AnimationController(vsync: this, duration: const Duration(seconds: 60));
+  late final AnimationController _finish = AnimationController(vsync: this, duration: const Duration(milliseconds: 1100));
+  double _frozen = 0;
+
+  bool get _reduced => PfMotion.reduced(context);
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_enter.status == AnimationStatus.dismissed) {
+      _reduced ? _enter.value = 1 : _enter.forward();
+      _clock.forward();
+    }
+  }
+
+  @override
+  void didUpdateWidget(CodeVerificationOverlay old) {
+    super.didUpdateWidget(old);
+    if (old.result == VerificationResult.pending && widget.result != VerificationResult.pending) {
+      _frozen = _pendingProgress;
+      _clock.stop();
+      if (_reduced) {
+        _finish.value = 1;
+        Future.delayed(const Duration(milliseconds: 400), () => widget.onFinished?.call());
+      } else {
+        _finish.forward(from: 0).whenComplete(() => widget.onFinished?.call());
+      }
+    }
+  }
+
+  double get _pendingProgress => PaymentVerifyingOverlay.handoffProgress * (1 - math.exp(-(_clock.value * 60) / 1.6));
+
+  @override
+  void dispose() {
+    _enter.dispose();
+    _clock.dispose();
+    _finish.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: Listenable.merge([_enter, _clock, _finish]),
+      builder: (context, _) {
+        final e = Curves.easeOutCubic.transform(_enter.value);
+        final grow = Curves.easeOutBack.transform(_enter.value);
+        final f = _finish.value;
+        final r = widget.result;
+        double progress;
+        String label;
+        var done = false;
+        var opacity = e;
+        var ripple = 0.0;
+        Color doneColor = Pf.success;
+        IconData doneIcon = Icons.check_rounded;
+        switch (r) {
+          case VerificationResult.pending:
+            progress = _pendingProgress;
+            label = widget.pendingLabel;
+          case VerificationResult.success:
+            final k = Curves.easeOutCubic.transform((f / 0.4).clamp(0, 1));
+            progress = _frozen + (1 - _frozen) * k;
+            done = f >= 0.4;
+            ripple = ((f - 0.55) / 0.45).clamp(0.0, 1.0);
+            label = done ? widget.successLabel : widget.pendingLabel;
+          case VerificationResult.failure:
+            progress = _frozen;
+            done = f >= 0.15;
+            doneColor = Pf.danger;
+            doneIcon = Icons.close_rounded;
+            label = widget.failureLabel;
+            opacity = e * (1 - ((f - 0.6) / 0.4).clamp(0.0, 1.0));
+        }
+        return Opacity(
+          opacity: opacity,
+          child: PaymentStageBackground(
+            child: Center(
+              child: Transform.scale(
+                scale: 0.3 + 0.7 * grow,
+                child: PaymentPulseStage(
+                  progress: progress,
+                  label: label,
+                  done: done,
+                  doneColor: doneColor,
+                  doneIcon: doneIcon,
+                  ripple: ripple,
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}

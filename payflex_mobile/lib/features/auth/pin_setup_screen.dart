@@ -5,6 +5,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/design/pf_code_input.dart';
+import '../../core/design/pf_components.dart';
+import '../payment/widgets/payment_flow_stage.dart';
 import 'widgets/auth_wave_background.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/network/api_config.dart';
@@ -25,9 +28,14 @@ class PinSetupScreen extends ConsumerStatefulWidget {
 }
 
 class _PinSetupScreenState extends ConsumerState<PinSetupScreen> {
-  final List<TextEditingController> _controllers = List.generate(4, (_) => TextEditingController());
-  final List<FocusNode> _focusNodes = List.generate(4, (_) => FocusNode());
+  final TextEditingController _code = TextEditingController();
+  final GlobalKey<PfCodeInputState> _codeKey = GlobalKey<PfCodeInputState>();
   bool _submitting = false;
+  /// Scène de vérification (réf. Checkout v3) : null = masquée.
+  VerificationResult? _stage;
+  bool _stageVisible = false;
+  bool _codeError = false;
+  Completer<void>? _stageDone;
   bool _pinVisible = false;
   Map<String, dynamic>? _cachedRegistrationData;
 
@@ -48,16 +56,11 @@ class _PinSetupScreenState extends ConsumerState<PinSetupScreen> {
 
   @override
   void dispose() {
-    for (final c in _controllers) {
-      c.dispose();
-    }
-    for (final n in _focusNodes) {
-      n.dispose();
-    }
+    _code.dispose();
     super.dispose();
   }
 
-  String get _pin => _controllers.map((c) => c.text).join();
+  String get _pin => _code.text;
 
   Map<String, dynamic> _registrationData() {
     if (_cachedRegistrationData != null && _cachedRegistrationData!.isNotEmpty) {
@@ -199,6 +202,8 @@ class _PinSetupScreenState extends ConsumerState<PinSetupScreen> {
     if (_submitting) return;
     final pin = _pin;
     if (pin.length != 4) {
+      setState(() => _codeError = true);
+      _codeKey.currentState?.shake();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Veuillez entrer 4 chiffres')),
       );
@@ -229,8 +234,11 @@ class _PinSetupScreenState extends ConsumerState<PinSetupScreen> {
       return;
     }
 
-    setState(() => _submitting = true);
-    _showBlockingLoader();
+    setState(() {
+      _submitting = true;
+      _codeError = false;
+    });
+    // La scène s'affiche quand le bouton a fini son morph (voir PfMorphButton.onCollapsed).
 
     try {
       final result = await ref
@@ -239,7 +247,6 @@ class _PinSetupScreenState extends ConsumerState<PinSetupScreen> {
           .timeout(_submitTimeout);
 
       if (!mounted) return;
-      Navigator.of(context, rootNavigator: true).pop();
 
       if (!result.success) {
         final recovered = await _tryRecoverAfterFailedSubmit(
@@ -250,7 +257,8 @@ class _PinSetupScreenState extends ConsumerState<PinSetupScreen> {
         );
         if (recovered) return;
         if (!mounted) return;
-        setState(() => _submitting = false);
+        await _endStage(VerificationResult.failure);
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
@@ -265,16 +273,18 @@ class _PinSetupScreenState extends ConsumerState<PinSetupScreen> {
         return;
       }
 
+      await _endStage(VerificationResult.success);
+      if (!mounted) return;
       await _finishRegistrationSuccess(role: role, pin: pin, data: data, registrationId: result.registrationId);
     } on TimeoutException {
-      if (mounted) Navigator.of(context, rootNavigator: true).pop();
       if (!mounted) return;
 
       final recovered = await _tryRecoverAfterFailedSubmit(role: role, pin: pin, data: data);
       if (recovered) return;
 
       if (!mounted) return;
-      setState(() => _submitting = false);
+      await _endStage(VerificationResult.failure);
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Connexion lente : réessayez. Évitez d’appuyer plusieurs fois sur le bouton.'),
@@ -282,7 +292,6 @@ class _PinSetupScreenState extends ConsumerState<PinSetupScreen> {
         ),
       );
     } catch (e) {
-      if (mounted) Navigator.of(context, rootNavigator: true).pop();
       if (!mounted) return;
 
       final recovered = await _tryRecoverAfterFailedSubmit(
@@ -294,52 +303,42 @@ class _PinSetupScreenState extends ConsumerState<PinSetupScreen> {
       if (recovered) return;
 
       if (!mounted) return;
-      setState(() => _submitting = false);
+      await _endStage(VerificationResult.failure);
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(UserVisibleMessage.forException(e))),
       );
     }
   }
 
-  void _showBlockingLoader() {
-    showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      barrierColor: Colors.black54,
-      useRootNavigator: true,
-      builder: (ctx) => PopScope(
-        canPop: false,
-        child: Center(
-          child: Material(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const SizedBox(
-                    width: 40,
-                    height: 40,
-                    child: CircularProgressIndicator(strokeWidth: 3, color: AppColors.secondary),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Enregistrement en cours…',
-                    style: GoogleFonts.manrope(fontWeight: FontWeight.w700, fontSize: 15),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Ne fermez pas l’application',
-                    style: GoogleFonts.inter(fontSize: 12, color: Colors.grey.shade600),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
+  /// Termine la scène : succès (coche) ou échec (croix rouge → retour à la
+  /// saisie, cases rouges + secousse). N'influe pas sur la logique serveur.
+  Future<void> _endStage(VerificationResult r) async {
+    if (!_stageVisible) {
+      // Réponse plus rapide que le morph du bouton : afficher la scène d'abord.
+      setState(() {
+        _stageVisible = true;
+        _stage = VerificationResult.pending;
+      });
+      await Future.delayed(const Duration(milliseconds: 350));
+      if (!mounted) return;
+    }
+    final done = Completer<void>();
+    setState(() {
+      _stage = r;
+      _stageDone = done;
+    });
+    await done.future.timeout(const Duration(seconds: 3), onTimeout: () {});
+    if (!mounted) return;
+    if (r == VerificationResult.failure) {
+      setState(() {
+        _stageVisible = false;
+        _stage = null;
+        _submitting = false;
+        _codeError = true;
+      });
+      _codeKey.currentState?.shake();
+    }
   }
 
   void _handleBack() {
@@ -360,7 +359,9 @@ class _PinSetupScreenState extends ConsumerState<PinSetupScreen> {
         if (didPop || _submitting) return;
         _handleBack();
       },
-      child: AuthWaveBackground(
+      child: Stack(
+        children: [
+          AuthWaveBackground(
         child: SafeArea(
           child: AbsorbPointer(
             absorbing: _submitting,
@@ -434,10 +435,20 @@ class _PinSetupScreenState extends ConsumerState<PinSetupScreen> {
                   const SizedBox(height: 12),
                   _buildFeatureTile(Icons.people_alt_rounded, 'Valider vos opérations\navec un agent'),
                   const SizedBox(height: 48),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: List.generate(4, _buildPinBox),
-                  ).animate().fadeIn(delay: 600.ms).slideY(begin: 0.1),
+                  PfReveal(
+                    index: 6,
+                    child: PfCodeInput(
+                      key: _codeKey,
+                      controller: _code,
+                      length: 4,
+                      obscure: !_pinVisible,
+                      enabled: !_submitting,
+                      error: _codeError,
+                      onChanged: (_) {
+                        if (_codeError) setState(() => _codeError = false);
+                      },
+                    ),
+                  ),
                   const SizedBox(height: 12),
                   Center(
                     child: TextButton.icon(
@@ -458,22 +469,40 @@ class _PinSetupScreenState extends ConsumerState<PinSetupScreen> {
                     ),
                   ),
                   const SizedBox(height: 48),
-                  ElevatedButton(
-                    onPressed: _submitting ? null : _submit,
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: const Size(double.infinity, 52),
-                    ),
-                    child: Text(
-                      'Terminer l\'inscription',
-                      style: GoogleFonts.manrope(fontWeight: FontWeight.w800),
-                    ),
-                  ).animate().fadeIn(delay: 800.ms).scale(),
+                  PfMorphButton(
+                    label: 'Terminer l\'inscription',
+                    busy: _submitting,
+                    onPressed: _submit,
+                    onCollapsed: () {
+                      if (mounted && _submitting && !_stageVisible) {
+                        setState(() {
+                          _stageVisible = true;
+                          _stage ??= VerificationResult.pending;
+                        });
+                      }
+                    },
+                  ),
                   const SizedBox(height: 120),
                 ],
               ),
             ),
           ),
         ),
+      ),
+          if (_stageVisible && _stage != null)
+            Positioned.fill(
+              child: CodeVerificationOverlay(
+                result: _stage!,
+                pendingLabel: 'Création de votre compte',
+                successLabel: 'Code PIN enregistré',
+                failureLabel: 'Échec de l’enregistrement',
+                onFinished: () {
+                  final c = _stageDone;
+                  if (c != null && !c.isCompleted) c.complete();
+                },
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -509,86 +538,5 @@ class _PinSetupScreenState extends ConsumerState<PinSetupScreen> {
         ],
       ),
     ).animate().fadeIn(delay: 400.ms).slideX(begin: 0.05);
-  }
-
-  Widget _buildPinBox(int index) {
-    final focused = _focusNodes[index].hasFocus;
-
-    return SizedBox(
-      width: 60,
-      height: 70,
-      child: Focus(
-        onKeyEvent: (node, event) {
-          if (event is! KeyDownEvent) return KeyEventResult.ignored;
-          if (event.logicalKey == LogicalKeyboardKey.backspace) {
-            if (_controllers[index].text.isNotEmpty) {
-              _controllers[index].clear();
-              setState(() {});
-              return KeyEventResult.handled;
-            }
-            if (index > 0) {
-              _controllers[index - 1].clear();
-              _focusNodes[index - 1].requestFocus();
-              setState(() {});
-              return KeyEventResult.handled;
-            }
-          }
-          return KeyEventResult.ignored;
-        },
-        child: TextField(
-          controller: _controllers[index],
-          focusNode: _focusNodes[index],
-          keyboardType: TextInputType.number,
-          textAlign: TextAlign.center,
-          maxLength: 1,
-          obscureText: !_pinVisible,
-          obscuringCharacter: '•',
-          enabled: !_submitting,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          style: GoogleFonts.manrope(
-            fontSize: 26,
-            fontWeight: FontWeight.w800,
-            color: AppColors.primary,
-            height: 1.1,
-          ),
-          cursorColor: AppColors.secondary,
-          decoration: InputDecoration(
-            counterText: '',
-            filled: true,
-            fillColor: Colors.white,
-            contentPadding: EdgeInsets.zero,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: focused ? AppColors.primary : Colors.grey.withValues(alpha: 0.28),
-                width: focused ? 2 : 1,
-              ),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: focused ? AppColors.primary : Colors.grey.withValues(alpha: 0.28),
-                width: focused ? 2 : 1,
-              ),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.primary, width: 2),
-            ),
-          ),
-          onChanged: (value) {
-            final digits = value.replaceAll(RegExp(r'\D'), '');
-            if (digits.length > 1) {
-              _controllers[index].text = digits.substring(digits.length - 1);
-              _controllers[index].selection = const TextSelection.collapsed(offset: 1);
-            }
-            if (_controllers[index].text.isNotEmpty && index < 3) {
-              _focusNodes[index + 1].requestFocus();
-            }
-            setState(() {});
-          },
-        ),
-      ),
-    );
   }
 }

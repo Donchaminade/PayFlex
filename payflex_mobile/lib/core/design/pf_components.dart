@@ -769,3 +769,92 @@ class PfCard extends StatelessWidget {
     return onTap == null ? c : PfPressable(onTap: onTap, child: c);
   }
 }
+
+/// Bouton principal qui « morphe » quand [busy] passe à true (réf. Checkout v3) :
+/// libellé → « Traitement… » + spinner (0,5 s) → carré avec spinner (0,45 s),
+/// puis [onCollapsed] (ex. afficher la scène de vérification).
+class PfMorphButton extends StatefulWidget {
+  const PfMorphButton({
+    super.key,
+    required this.label,
+    required this.onPressed,
+    this.busy = false,
+    this.icon = Icons.lock_rounded,
+    this.busyLabel = 'Traitement…',
+    this.onCollapsed,
+  });
+  final String label;
+  final String busyLabel;
+  final IconData? icon;
+  final VoidCallback? onPressed;
+  final bool busy;
+  final VoidCallback? onCollapsed;
+
+  @override
+  State<PfMorphButton> createState() => _PfMorphButtonState();
+}
+
+class _PfMorphButtonState extends State<PfMorphButton> {
+  int _step = 0; // 0 idle, 1 traitement, 2 carré
+
+  @override
+  void didUpdateWidget(PfMorphButton old) {
+    super.didUpdateWidget(old);
+    if (!old.busy && widget.busy) _run();
+    if (old.busy && !widget.busy) setState(() => _step = 0);
+  }
+
+  Future<void> _run() async {
+    final reduced = PfMotion.reduced(context);
+    setState(() => _step = 1);
+    await Future.delayed(Duration(milliseconds: reduced ? 0 : 500));
+    if (!mounted || !widget.busy) return;
+    setState(() => _step = 2);
+    await Future.delayed(Duration(milliseconds: reduced ? 0 : 450));
+    if (!mounted || !widget.busy) return;
+    widget.onCollapsed?.call();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final collapsed = widget.busy && _step >= 2;
+    final reduced = PfMotion.reduced(context);
+    return Center(
+      child: LayoutBuilder(builder: (context, c) {
+        return AnimatedContainer(
+          duration: reduced ? Duration.zero : const Duration(milliseconds: 420),
+          curve: Curves.easeInOutCubic,
+          width: collapsed ? 60 : c.maxWidth,
+          height: 60,
+          child: ElevatedButton(
+            onPressed: widget.busy ? () {} : widget.onPressed,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Pf.gold,
+              foregroundColor: Pf.ink,
+              disabledBackgroundColor: Pf.fill,
+              minimumSize: const Size(60, 60),
+              padding: EdgeInsets.zero,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(collapsed ? 18 : 30)),
+              elevation: 0,
+            ),
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              child: !widget.busy
+                  ? Row(key: const ValueKey('i'), mainAxisAlignment: MainAxisAlignment.center, children: [
+                      if (widget.icon != null) ...[Icon(widget.icon, size: 18), const SizedBox(width: Pf.s8)],
+                      Flexible(child: Text(widget.label, overflow: TextOverflow.ellipsis, style: Pf.label(size: 16, w: FontWeight.w800))),
+                    ])
+                  : collapsed
+                      ? const SizedBox(key: ValueKey('s'), width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5, color: Pf.ink))
+                      : Row(key: const ValueKey('p'), mainAxisAlignment: MainAxisAlignment.center, children: [
+                          const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2.2, color: Pf.ink)),
+                          const SizedBox(width: Pf.s12),
+                          Text(widget.busyLabel, style: Pf.label(size: 16, w: FontWeight.w800)),
+                        ]),
+            ),
+          ),
+        );
+      }),
+    );
+  }
+}
