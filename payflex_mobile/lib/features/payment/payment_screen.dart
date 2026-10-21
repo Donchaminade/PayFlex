@@ -794,11 +794,14 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
     final fin = ref.read(financeProvider);
     double rate = 0;
     String? productName;
+    double? projSaved, projTotal;
     if (_selectedProjectId != null) {
       try {
         final p = fin.projects.firstWhere((p) => p.id == _selectedProjectId);
         rate = p.dailySuggested;
         productName = p.title;
+        projSaved = p.saved;
+        projTotal = p.total;
       } catch (_) {
         rate = fin.projects.isNotEmpty ? fin.projects.first.dailySuggested : 0;
         productName = fin.projects.isNotEmpty ? fin.projects.first.title : null;
@@ -841,6 +844,11 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                   paymentModeLabel: paymentModeLabel,
                   slotsCount: slotsLabel,
                   awaitingValidation: awaitingAgentValidation,
+                  clientName: ref.read(authProvider).name,
+                  projectName: productName,
+                  agentName: ref.read(authProvider).assignedAgentName,
+                  projectSaved: projSaved,
+                  projectTotal: projTotal,
                 ),
               ),
             );

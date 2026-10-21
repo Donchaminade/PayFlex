@@ -177,7 +177,7 @@ class _ShowcaseApp extends ConsumerWidget {
       'project' => const DashboardProjectDetailScreen(projectId: '1'),
       'gap-fill' => const GapFillScreen(),
       'adhesion' => const AdhesionPaymentScreen(),
-      'receipt' => ContributionReceiptScreen(amount: 1300, reference: 'PF-1761036000', paidAt: DateTime(2026, 10, 21, 9, 12), paymentModeLabel: 'Payé via T-Money', slotsCount: 2),
+      'receipt' => ContributionReceiptScreen(amount: 1300, reference: 'PF-1761036000', paidAt: DateTime(2026, 10, 21, 9, 12), paymentModeLabel: 'T-Money', slotsCount: 2, clientName: 'Ama Kossiwa Mensah', projectName: 'Machine à coudre Juki Pro', agentName: 'Kodjo Agbeko', projectSaved: 96500, projectTotal: 185000),
       'agent' => const AgentMainNavigationScreen(),
       'agent-clients' => const AgentClientListScreen(),
       'agent-queue' => const AgentValidationQueueScreen(),
