@@ -17,6 +17,7 @@ import '../../core/widgets/payflex_phone_field.dart';
 import '../../core/utils/phone_input_utils.dart';
 import 'contribution_receipt_screen.dart';
 import 'payment_success_screen.dart';
+import 'widgets/payment_flow_stage.dart';
 
 class PaymentScreen extends ConsumerStatefulWidget {
   const PaymentScreen({super.key});
@@ -31,6 +32,10 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
   String _selectedMobileProvider = 'Flooz';
   String? _selectedProjectId;
   bool _isProcessing = false;
+  /// Garde la scène visible entre la fin du traitement et l'écran de succès.
+  bool _handingOff = false;
+  /// Morphing du bouton (réf. Checkout v3) : 0 normal, 1 « Traitement… », 2 réduit en carré.
+  int _morph = 0;
   bool _useAlternatePayerPhone = false;
   // PayDunya = passerelle mobile money unique. Masquée si le backend ne l'a pas configurée.
   bool _paydunyaAvailable = false;
@@ -448,35 +453,63 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
 
                 const SizedBox(height: 36),
 
-                // === BOUTON CONFIRMER ===
-                SizedBox(
-                  width: double.infinity,
-                  height: 60,
-                  child: ElevatedButton(
-                    onPressed: (projects.isEmpty || _amountController.text.isEmpty || _isProcessing || !hasSelectable || projectLocked)
-                      ? null
-                      : () => _processPayment(context),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: AppColors.secondary,
-                      disabledBackgroundColor: Pf.fill,
-                      shape: const StadiumBorder(),
-                      elevation: 0,
-                    ),
-                    child: _isProcessing
-                      ? const CircularProgressIndicator(color: AppColors.secondary)
-                      : Text(
-                          'Confirmer le paiement',
-                          style: Pf.label(size: 16, w: FontWeight.w800),
+                // === BOUTON CONFIRMER (morph « Traitement… » → carré, réf. Checkout v3) ===
+                Center(
+                  child: LayoutBuilder(builder: (context, c) {
+                    final collapsed = _isProcessing && _morph >= 2;
+                    final enabled = !(projects.isEmpty || _amountController.text.isEmpty || _isProcessing || !hasSelectable || projectLocked);
+                    return AnimatedContainer(
+                      duration: PfMotion.reduced(context) ? Duration.zero : const Duration(milliseconds: 420),
+                      curve: Curves.easeInOutCubic,
+                      width: collapsed ? 60 : c.maxWidth,
+                      height: 60,
+                      child: ElevatedButton(
+                        onPressed: enabled ? () => _processPayment(context) : (_isProcessing ? () {} : null),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: AppColors.secondary,
+                          disabledBackgroundColor: Pf.fill,
+                          minimumSize: const Size(60, 60),
+                          padding: EdgeInsets.zero,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(collapsed ? 18 : 30)),
+                          elevation: 0,
                         ),
-                  ),
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 200),
+                          child: !_isProcessing
+                              ? Row(
+                                  key: const ValueKey('idle'),
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(Icons.lock_rounded, size: 18),
+                                    const SizedBox(width: Pf.s8),
+                                    Text('Confirmer le paiement', style: Pf.label(size: 16, w: FontWeight.w800)),
+                                  ],
+                                )
+                              : collapsed
+                                  ? const SizedBox(key: ValueKey('sq'), width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5, color: AppColors.secondary))
+                                  : Row(
+                                      key: const ValueKey('proc'),
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2.2, color: AppColors.secondary)),
+                                        const SizedBox(width: Pf.s12),
+                                        Text('Traitement…', style: Pf.label(size: 16, w: FontWeight.w800)),
+                                      ],
+                                    ),
+                        ),
+                      ),
+                    );
+                  }),
                 ).animate().fadeIn(delay: 500.ms).slideY(begin: 0.2),
               ],
             ],
           ),
           ),
           // Anneau de progression pendant le traitement → écran de succès
-          if (_isProcessing) const Positioned.fill(child: _PaymentProcessingOverlay()),
+          // Scène de vérification (anneaux dorés) après le morphing du bouton
+          if ((_isProcessing && _morph >= 3) || _handingOff)
+            const Positioned.fill(child: PaymentVerifyingOverlay()),
         ],
       ),
     );
@@ -522,6 +555,17 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
     return Text(t[0].toUpperCase() + t.substring(1), style: Pf.title(size: 17));
   }
 
+  /// Timing du morph : 0,5 s « Traitement… », 0,45 s réduction, puis scène.
+  Future<void> _runButtonMorph() async {
+    final reduced = PfMotion.reduced(context);
+    await Future.delayed(Duration(milliseconds: reduced ? 0 : 500));
+    if (!mounted || !_isProcessing) return;
+    setState(() => _morph = 2);
+    await Future.delayed(Duration(milliseconds: reduced ? 0 : 450));
+    if (!mounted || !_isProcessing) return;
+    setState(() => _morph = 3);
+  }
+
   Future<void> _processPayment(BuildContext context) async {
     final amount = double.tryParse(_amountController.text) ?? 0;
     if (amount <= 0) return;
@@ -552,7 +596,11 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
       if (entered.isNotEmpty) payerPhone = entered;
     }
 
-    setState(() => _isProcessing = true);
+    setState(() {
+      _isProcessing = true;
+      _morph = 1;
+    });
+    _runButtonMorph();
 
     final auth = ref.read(authProvider);
     final authPhone = auth.phone?.trim() ?? '';
@@ -690,13 +738,17 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
     }
 
     if (!mounted) return;
-    setState(() => _isProcessing = false);
+    setState(() {
+      _isProcessing = false;
+      _handingOff = true;
+    });
     final recorded = await ref.read(financeProvider.notifier).addContribution(
       amount,
       paymentMode: paymentMode,
       contributorUserId: auth.userId,
       transactionId: serverContributionId,
     );
+    if (!recorded && mounted) setState(() => _handingOff = false);
     if (!recorded && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -761,9 +813,11 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
         _selectedMethod == 'mobile_money' ? 'Payé via $_selectedMobileProvider' : 'Payé en espèces (Agent)';
 
     Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        fullscreenDialog: true,
-        builder: (screenContext) => PaymentSuccessScreen(
+      PageRouteBuilder<void>(
+        transitionDuration: const Duration(milliseconds: 220),
+        reverseTransitionDuration: const Duration(milliseconds: 220),
+        transitionsBuilder: (_, a, __, child) => FadeTransition(opacity: a, child: child),
+        pageBuilder: (screenContext, _, __) => PaymentSuccessScreen(
           amount: amount,
           awaitingAgentValidation: awaitingAgentValidation,
           gatewayConfirmed: gatewayConfirmed,
@@ -793,7 +847,9 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
           },
         ),
       ),
-    );
+    ).then((_) {
+      if (mounted) setState(() => _handingOff = false);
+    });
   }
 
   Widget _payerPhoneSection() {
@@ -909,54 +965,6 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
               fontWeight: FontWeight.w800,
               color: isSelected ? AppColors.secondary : AppColors.secondary.withOpacity(0.7),
             ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-
-class _PaymentProcessingOverlay extends StatefulWidget {
-  const _PaymentProcessingOverlay();
-  @override
-  State<_PaymentProcessingOverlay> createState() => _PaymentProcessingOverlayState();
-}
-
-class _PaymentProcessingOverlayState extends State<_PaymentProcessingOverlay> with SingleTickerProviderStateMixin {
-  late final AnimationController _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 1200));
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (!PfMotion.reduced(context) && !_c.isAnimating) _c.repeat();
-  }
-
-  @override
-  void dispose() {
-    _c.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return BackdropFilter(
-      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-      child: ColoredBox(
-        color: Pf.canvas.withValues(alpha: 0.72),
-        child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              RotationTransition(
-                turns: _c,
-                child: const PfRing(value: 0.28, size: 88, stroke: 8, color: Pf.gold),
-              ),
-              const SizedBox(height: Pf.s24),
-              Text('Paiement en cours…', style: Pf.title(size: 18)),
-              const SizedBox(height: Pf.s8),
-              Text('Ne fermez pas l’application', style: Pf.body()),
-            ],
           ),
         ),
       ),

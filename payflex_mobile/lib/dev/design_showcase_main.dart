@@ -14,6 +14,8 @@ import '../core/providers/finance_provider.dart';
 import '../core/providers/navigation_provider.dart';
 import '../core/theme/app_theme.dart';
 import '../features/auth/login_screen.dart';
+import 'checkout_flow_demo.dart';
+import '../features/payment/widgets/payment_flow_stage.dart';
 import '../features/catalogue/product_detail_screen.dart';
 import '../features/main_navigation_screen.dart';
 import '../features/payment/payment_success_screen.dart';
@@ -119,6 +121,8 @@ class _ShowcaseApp extends ConsumerWidget {
     final Widget home = switch (screen) {
       'product' => ProductDetailScreen(product: demoProducts.first),
       'login' => const LoginScreen(),
+      'checkout' => const CheckoutFlowDemo(),
+      'verifying' => const Scaffold(body: PaymentVerifyingOverlay()),
       'success' => PaymentSuccessScreen(amount: 1300, awaitingAgentValidation: false, gatewayConfirmed: true, paymentModeLabel: 'Mobile money (T-Money)', slotsCount: 2, productName: 'Machine à coudre Juki Pro', onDone: () {}),
       _ => const MainNavigationScreen(),
     };
