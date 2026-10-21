@@ -23,6 +23,7 @@ import '../support/client_report_screen.dart';
 import '../vitrine/job_offers_screen.dart';
 import '../../core/widgets/client_bonus_savings_card.dart';
 import '../../core/widgets/payflex_quick_access_row.dart';
+import '../../core/design/pf_components.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -55,157 +56,139 @@ class DashboardScreen extends ConsumerWidget {
     final greeting = hour < 12 ? 'Bonjour' : hour < 18 ? 'Bon après-midi' : 'Bonsoir';
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: Pf.canvas,
       body: Stack(
         children: [
-          // Blobs décoratifs
-          Positioned(
-            top: 180, right: -80,
-            child: _blob(const Color.fromARGB(255, 202, 127, 6), 280),
-          ).animate(onPlay: (c) => c.repeat(reverse: true))
-           .move(duration: 10.seconds, begin: const Offset(-20, -20), end: const Offset(20, 20)),
-
-          Positioned(
-            bottom: 250, left: -120,
-            child: _blob(AppColors.secondary, 350),
-          ).animate(onPlay: (c) => c.repeat(reverse: true))
-           .move(duration: 15.seconds, begin: const Offset(20, 20), end: const Offset(-20, -20)),
-
-          // Contenu
           CustomScrollView(
             slivers: [
-
-              // En-tête bleu : défile en bloc (évite que le solde soit coupé par le SliverAppBar)
+              // === EN-TÊTE « EXPLORE » ===
               SliverToBoxAdapter(
-                child: Container(
-                  width: double.infinity,
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [AppColors.secondary, Color(0xFF1A2E5A)],
-                    ),
-                  ),
-                  child: SafeArea(
-                    bottom: false,
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 8, 24, 28),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              GestureDetector(
-                                onTap: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (_) => const ProfileScreen()),
-                                ),
-                                child: PayflexProfileAvatar(
-                                  letter: auth.avatarLetter,
-                                  imageUrl: auth.profilePhotoUrl,
-                                  awaitingAdminApproval: auth.awaitingAdminApproval,
-                                  radius: 20,
-                                  letterFontSize: 18,
-                                ),
+                child: SafeArea(
+                  bottom: false,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(Pf.gutter, Pf.s16, Pf.gutter, 0),
+                        child: Row(
+                          children: [
+                            PfPressable(
+                              onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => const ProfileScreen()),
                               ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      '$greeting, ${auth.greetingFirstName} 👋',
-                                      style: GoogleFonts.manrope(
-                                        color: Colors.white.withOpacity(0.7),
-                                        fontSize: 13,
-                                      ),
-                                    ),
-                                    Text(
-                                      auth.name?.trim().isNotEmpty == true
-                                          ? auth.name!.trim()
-                                          : 'Mon espace PayFlex',
-                                      style: GoogleFonts.manrope(
-                                        color: Colors.white,
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w800,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      '${auth.statusLabelFr()} · ${auth.roleLabelFr()}',
-                                      style: GoogleFonts.inter(
-                                        color: Colors.white.withOpacity(0.55),
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    if (auth.assignedAgentName != null &&
-                                        auth.assignedAgentName!.trim().isNotEmpty)
-                                      Padding(
-                                        padding: const EdgeInsets.only(top: 2),
-                                        child: Text(
-                                          'Agent PayFlex : ${auth.assignedAgentName!.trim()}',
-                                          style: GoogleFonts.inter(
-                                            color: AppColors.primary,
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.w700,
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                  ],
-                                ),
+                              semanticLabel: 'Mon profil',
+                              child: PayflexProfileAvatar(
+                                letter: auth.avatarLetter,
+                                imageUrl: auth.profilePhotoUrl,
+                                awaitingAdminApproval: auth.awaitingAdminApproval,
+                                radius: 20,
+                                letterFontSize: 16,
                               ),
-                              Stack(
-                                clipBehavior: Clip.none,
+                            ),
+                            const SizedBox(width: Pf.s12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  IconButton(
-                                    icon: const Icon(Icons.notifications_none_rounded, color: Colors.white),
-                                    onPressed: auth.role == 'client'
-                                        ? () => Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (_) => const ClientNotificationsScreen(),
-                                              ),
-                                            )
-                                        : null,
+                                  Text(
+                                    auth.name?.trim().isNotEmpty == true ? auth.name!.trim() : 'Mon espace PayFlex',
+                                    style: Pf.label(size: 14),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                  if (inboxState != null && inboxState.notificationsUnread > 0)
-                                    CountBadge(
-                                      count: inboxState.notificationsUnread,
-                                      top: 8,
-                                      right: 8,
-                                    ),
+                                  Text(
+                                    auth.assignedAgentName != null && auth.assignedAgentName!.trim().isNotEmpty
+                                        ? '${auth.statusLabelFr()} · Agent ${auth.assignedAgentName!.trim()}'
+                                        : '${auth.statusLabelFr()} · ${auth.roleLabelFr()}',
+                                    style: Pf.body(size: 12),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ],
                               ),
-                            ],
-                          ),
-                          const SizedBox(height: 22),
-                          Text(
-                            'SOLDE TOTAL ÉPARGNÉ',
-                            style: GoogleFonts.manrope(
-                              color: Colors.white.withOpacity(0.55),
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 2,
                             ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            formatFcfaLong(financeState.balance),
-                            style: GoogleFonts.manrope(
-                              color: AppColors.primary,
-                              fontSize: 34,
-                              fontWeight: FontWeight.w900,
-                              height: 1.1,
+                            PfCircleButton(
+                              icon: Icons.notifications_none_rounded,
+                              semanticLabel: 'Notifications',
+                              dot: inboxState != null && inboxState.notificationsUnread > 0,
+                              onTap: auth.role == 'client'
+                                  ? () => Navigator.push(
+                                        context,
+                                        MaterialPageRoute(builder: (_) => const ClientNotificationsScreen()),
+                                      )
+                                  : null,
                             ),
-                          ).animate().fadeIn(delay: 200.ms).scale(begin: const Offset(0.9, 0.9)),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
+                      PfReveal(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(Pf.gutter, Pf.s24, Pf.gutter, Pf.s20),
+                          child: Text('$greeting,\n${auth.greetingFirstName}', style: Pf.display()),
+                        ),
+                      ),
+                      PfReveal(
+                        index: 1,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: Pf.gutter),
+                          child: PfSearchBar(
+                            hint: 'Rechercher un équipement',
+                            readOnly: true,
+                            onTap: () => ref.read(navigationIndexProvider.notifier).setIndex(1),
+                            onFilter: () => ref.read(navigationIndexProvider.notifier).setIndex(1),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: Pf.s8),
+                      PfReveal(
+                        index: 2,
+                        child: PfCategoryTabs(
+                          selected: 0,
+                          items: const [
+                            PfTabItem('Aperçu', Icons.space_dashboard_rounded),
+                            PfTabItem('Catalogue', Icons.storefront_rounded),
+                            PfTabItem('Cotiser', Icons.payments_rounded),
+                            PfTabItem('Suivi', Icons.calendar_month_rounded),
+                            PfTabItem('Opportunités', Icons.work_outline_rounded),
+                          ],
+                          onSelected: (i) {
+                            if (i == 0) return;
+                            if (i == 4) {
+                              Navigator.push(context, MaterialPageRoute(builder: (_) => const JobOffersScreen()));
+                              return;
+                            }
+                            final tab = i == 1 ? 1 : (i == 2 ? 2 : 3);
+                            if (!auth.canUseAppFeatures && tab != 1) {
+                              showRegistrationFeatureLockedSnackBar(context, tab == 2 ? 'Paiement' : 'Suivi');
+                              return;
+                            }
+                            ref.read(navigationIndexProvider.notifier).setIndex(tab);
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: Pf.s24),
+                      // Carte vedette : solde épargné
+                      PfReveal(
+                        index: 3,
+                        scale: true,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: Pf.gutter),
+                          child: _BalanceFeaturedCard(
+                            balance: financeState.balance,
+                            projects: financeState.projects,
+                            locked: auth.awaitingAdminApproval,
+                            onPay: () {
+                              if (!auth.canUseAppFeatures) {
+                                showRegistrationFeatureLockedSnackBar(context, 'Paiement');
+                                return;
+                              }
+                              ref.read(navigationIndexProvider.notifier).setIndex(2);
+                            },
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -281,32 +264,30 @@ class DashboardScreen extends ConsumerWidget {
                   ),
                 ),
 
-              // === QUICK STATS (fond clair séparé, ne recouvre plus le solde) ===
+              // === CHIFFRES CLÉS ===
               SliverToBoxAdapter(
-                child: Container(
-                  width: double.infinity,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFF8FAFC),
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-                  ),
-                  padding: const EdgeInsets.fromLTRB(24, 22, 24, 0),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(Pf.gutter, Pf.s16, Pf.gutter, 0),
                   child: Row(
                     children: [
                       _statCard(
+                        index: 0,
                         icon: Icons.trending_up_rounded,
                         label: 'Projets actifs',
                         value: auth.awaitingAdminApproval ? '—' : '${financeState.projects.length}',
-                        color: AppColors.primary,
+                        color: Pf.gold,
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: Pf.s12),
                       _statCard(
+                        index: 1,
                         icon: Icons.receipt_long_rounded,
                         label: 'Transactions',
                         value: '${financeState.transactions.length}',
-                        color: AppColors.secondary,
+                        color: Pf.ink,
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: Pf.s12),
                       _statCard(
+                        index: 2,
                         icon: Icons.history_toggle_off_rounded,
                         label: 'Rattrapages',
                         value: '${financeState.catchUpOrangeDaysCount}',
@@ -314,7 +295,7 @@ class DashboardScreen extends ConsumerWidget {
                       ),
                     ],
                   ),
-                ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.1),
+                ),
               ),
 
               if (!auth.awaitingAdminApproval &&
@@ -476,152 +457,80 @@ class DashboardScreen extends ConsumerWidget {
                 ),
               ),
 
-              // === ACCÈS RAPIDES ===
+              // === DISCUSSION ===
               SliverToBoxAdapter(
-                child: ColoredBox(
-                  color: const Color(0xFFF8FAFC),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                      Text('ACCÈS RAPIDES',
-                        style: GoogleFonts.manrope(
-                          fontSize: 10, fontWeight: FontWeight.w900,
-                          letterSpacing: 2, color: AppColors.secondary.withOpacity(0.4),
-                        )),
-                      const SizedBox(height: 14),
-                      Row(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: Pf.gutter),
+                  child: PfReveal(
+                    index: 4,
+                    child: PfCard(
+                      onTap: () {
+                        if (!auth.canUseAppFeatures) {
+                          showRegistrationFeatureLockedSnackBar(context, 'Discussion support');
+                          return;
+                        }
+                        Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatScreen()));
+                      },
+                      child: Row(
                         children: [
-                          _quickAction(
-                            context, ref,
-                            icon: Icons.storefront_outlined,
-                            label: 'Explorer\nCatalogue',
-                            color: AppColors.secondary,
-                            tabIndex: 1,
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(color: Pf.gold.withValues(alpha: 0.16), borderRadius: Pf.br(Pf.rSm)),
+                            child: Stack(
+                              clipBehavior: Clip.none,
+                              alignment: Alignment.center,
+                              children: [
+                                const Icon(Icons.chat_bubble_outline_rounded, color: Pf.ink, size: 22),
+                                if (inboxState != null && inboxState.chatUnread > 0)
+                                  CountBadge(count: inboxState.chatUnread, top: -6, right: -6),
+                              ],
+                            ),
                           ),
-                          const SizedBox(width: 12),
-                          _quickAction(
-                            context, ref,
-                            icon: Icons.payments_outlined,
-                            label: 'Cotiser\n(Paiement)',
-                            color: AppColors.primary,
-                            tabIndex: 2,
+                          const SizedBox(width: Pf.s12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Message / Discussion', style: Pf.label()),
+                                Text('Votre agent et le support PayFlex', style: Pf.body(size: 12)),
+                              ],
+                            ),
                           ),
-                          const SizedBox(width: 12),
-                          _quickAction(
-                            context, ref,
-                            icon: Icons.calendar_month_outlined,
-                            label: 'Mon\nSuivi',
-                            color: const Color(0xFF38A169),
-                            tabIndex: 3,
-                          ),
-                          const SizedBox(width: 12),
-                          _quickAction(
-                            context, ref,
-                            icon: Icons.person_outline_rounded,
-                            label: 'Mon\nProfil',
-                            color: const Color(0xFF8E24AA),
-                            tabIndex: 4,
-                          ),
+                          const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Pf.faint),
                         ],
                       ),
-                      const SizedBox(height: 14),
-                      Material(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(18),
-                        child: InkWell(
-                          onTap: () {
-                            if (!auth.canUseAppFeatures) {
-                              showRegistrationFeatureLockedSnackBar(context, 'Discussion support');
-                              return;
-                            }
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (_) => const ChatScreen()),
-                            );
-                          },
-                          borderRadius: BorderRadius.circular(18),
-                          child: Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(18),
-                              border: Border.all(color: AppColors.secondary.withOpacity(0.12)),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.03),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Stack(
-                                  clipBehavior: Clip.none,
-                                  children: [
-                                    Icon(Icons.chat_bubble_outline_rounded, color: AppColors.secondary, size: 22),
-                                    if (inboxState != null && inboxState.chatUnread > 0)
-                                      CountBadge(count: inboxState.chatUnread, top: -4, right: -6),
-                                  ],
-                                ),
-                                const SizedBox(width: 10),
-                                Text(
-                                  'Message / Discussion',
-                                  style: GoogleFonts.manrope(
-                                    fontWeight: FontWeight.w800,
-                                    fontSize: 14,
-                                    color: AppColors.secondary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                      ],
                     ),
-                  ).animate().fadeIn(delay: 400.ms),
+                  ),
                 ),
               ),
 
-              const SliverToBoxAdapter(child: SizedBox(height: 28)),
+              const SliverToBoxAdapter(child: SizedBox(height: Pf.s32)),
 
               // === MES PROJETS ===
               if (financeState.projects.isNotEmpty) ...[
                 SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text('MES PROJETS',
-                          style: GoogleFonts.manrope(
-                            fontSize: 10, fontWeight: FontWeight.w900,
-                            letterSpacing: 2, color: AppColors.secondary.withOpacity(0.4),
-                          )),
-                        TextButton(
-                          onPressed: () => ref.read(navigationIndexProvider.notifier).setIndex(3),
-                          child: Text('Voir tout', style: GoogleFonts.manrope(
-                            color: AppColors.secondary, fontSize: 12, fontWeight: FontWeight.bold,
-                          )),
-                        ),
-                      ],
-                    ),
+                  child: PfSectionHeader(
+                    title: 'Mes projets',
+                    action: 'Voir tout',
+                    onAction: () => ref.read(navigationIndexProvider.notifier).setIndex(3),
                   ),
                 ),
+                const SliverToBoxAdapter(child: SizedBox(height: Pf.s12)),
                 SliverToBoxAdapter(
                   child: SizedBox(
-                    height: 170,
+                    height: 196,
                     child: ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      clipBehavior: Clip.none,
+                      padding: const EdgeInsets.symmetric(horizontal: Pf.gutter),
                       scrollDirection: Axis.horizontal,
                       itemCount: financeState.projects.length,
                       itemBuilder: (context, index) {
                         final project = financeState.projects[index];
-                        return InkWell(
+                        return PfReveal(
+                          index: index,
+                          scale: true,
+                          child: PfPressable(
                           onTap: () async {
                             await Navigator.of(context).push(
                               MaterialPageRoute<void>(
@@ -632,7 +541,6 @@ class DashboardScreen extends ConsumerWidget {
                               await ref.read(financeProvider.notifier).reload();
                             }
                           },
-                          borderRadius: BorderRadius.circular(22),
                           child: ProjectCard(
                             title: project.title,
                             saved: formatFcfa(project.saved, withSuffix: false),
@@ -640,7 +548,8 @@ class DashboardScreen extends ConsumerWidget {
                             progress: project.progress,
                             color: AppColors.primary,
                           ),
-                        ).animate().fadeIn(delay: (400 + (index * 100)).ms).slideX(begin: 0.2);
+                        ),
+                        );
                       },
                     ),
                   ),
@@ -650,47 +559,22 @@ class DashboardScreen extends ConsumerWidget {
 
               // === ACTIVITÉS RÉCENTES ===
               SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('ACTIVITÉS RÉCENTES',
-                        style: GoogleFonts.manrope(
-                          fontSize: 10, fontWeight: FontWeight.w900,
-                          letterSpacing: 2, color: AppColors.secondary.withOpacity(0.4),
-                        )),
-                      TextButton(
-                        onPressed: () => ref.read(navigationIndexProvider.notifier).setIndex(3),
-                        child: Text('Tout voir', style: GoogleFonts.manrope(
-                          color: AppColors.secondary, fontSize: 12, fontWeight: FontWeight.bold,
-                        )),
-                      ),
-                    ],
-                  ),
+                child: PfSectionHeader(
+                  title: 'Activités récentes',
+                  action: 'Tout voir',
+                  onAction: () => ref.read(navigationIndexProvider.notifier).setIndex(3),
                 ),
               ),
+              const SliverToBoxAdapter(child: SizedBox(height: Pf.s8)),
 
               if (financeState.transactions.isEmpty)
                 SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.all(32),
-                    child: Center(
-                      child: Column(
-                        children: [
-                          Icon(Icons.receipt_long_rounded, size: 60, color: Colors.grey.shade200),
-                          const SizedBox(height: 12),
-                          Text('Aucune transaction', style: GoogleFonts.manrope(
-                            color: Colors.grey.shade400, fontWeight: FontWeight.bold,
-                          )),
-                          const SizedBox(height: 8),
-                          Text('Commencez une épargne depuis le catalogue !',
-                            style: GoogleFonts.inter(color: Colors.grey.shade400, fontSize: 12),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ),
-                    ),
+                  child: PfEmptyState(
+                    icon: Icons.receipt_long_rounded,
+                    title: 'Aucune transaction',
+                    message: 'Commencez une épargne depuis le catalogue !',
+                    action: 'Explorer le catalogue',
+                    onAction: () => ref.read(navigationIndexProvider.notifier).setIndex(1),
                   ),
                 )
               else
@@ -698,16 +582,13 @@ class DashboardScreen extends ConsumerWidget {
                   delegate: SliverChildBuilderDelegate(
                     (context, index) {
                       final transaction = financeState.transactions[index];
-                      return TransactionTile(transaction: transaction)
-                          .animate()
-                          .fadeIn(delay: (600 + (index * 50)).ms)
-                          .slideY(begin: 0.2);
+                      return PfReveal(index: index, child: TransactionTile(transaction: transaction));
                     },
                     childCount: financeState.transactions.length,
                   ),
                 ),
 
-              const SliverToBoxAdapter(child: SizedBox(height: 100)),
+              const SliverToBoxAdapter(child: SizedBox(height: 120)),
             ],
           ),
         ],
@@ -715,75 +596,76 @@ class DashboardScreen extends ConsumerWidget {
     );
   }
 
-  Widget _statCard({required IconData icon, required String label, required String value, required Color color}) {
+  Widget _statCard({required int index, required IconData icon, required String label, required String value, required Color color}) {
     return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))],
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: color, size: 22),
-            const SizedBox(height: 6),
-            Text(value, style: GoogleFonts.manrope(fontWeight: FontWeight.w900, fontSize: 18, color: AppColors.secondary)),
-            Text(label, style: GoogleFonts.inter(color: Colors.grey, fontSize: 10), textAlign: TextAlign.center),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _quickAction(BuildContext context, WidgetRef ref, {
-    required IconData icon,
-    required String label,
-    required Color color,
-    required int tabIndex,
-  }) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: () {
-          final auth = ref.read(authProvider);
-          if (!auth.canUseAppFeatures && (tabIndex == 2 || tabIndex == 3)) {
-            showRegistrationFeatureLockedSnackBar(
-              context,
-              tabIndex == 2 ? 'Paiement' : 'Suivi',
-            );
-            return;
-          }
-          ref.read(navigationIndexProvider.notifier).setIndex(tabIndex);
-        },
+      child: PfReveal(
+        index: index + 4,
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.08),
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: color.withOpacity(0.1)),
-          ),
+          padding: const EdgeInsets.all(Pf.s16),
+          decoration: BoxDecoration(color: Pf.surface, borderRadius: Pf.br(Pf.rLg), boxShadow: Pf.shadowSoft),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(icon, color: color, size: 26),
-              const SizedBox(height: 8),
-              Text(label, style: GoogleFonts.manrope(
-                color: AppColors.secondary, fontSize: 11, fontWeight: FontWeight.w700, height: 1.2,
-              ), textAlign: TextAlign.center),
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: Pf.br(10)),
+                child: Icon(icon, color: color, size: 18),
+              ),
+              const SizedBox(height: Pf.s12),
+              Text(value, style: Pf.num(size: 22)),
+              const SizedBox(height: 2),
+              Text(label, style: Pf.body(size: 11), maxLines: 1, overflow: TextOverflow.ellipsis),
             ],
           ),
         ),
       ),
     );
   }
+}
 
-  Widget _blob(Color color, double size) {
-    return Container(
-      width: size, height: size,
-      decoration: BoxDecoration(color: color.withOpacity(0.04), shape: BoxShape.circle),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 50, sigmaY: 50),
-        child: Container(color: Colors.transparent),
+/// Carte vedette « solde épargné » (style featured card) avec compteur animé et anneau.
+class _BalanceFeaturedCard extends StatelessWidget {
+  const _BalanceFeaturedCard({required this.balance, required this.projects, required this.locked, required this.onPay});
+  final double balance;
+  final List<ProjectModel> projects;
+  final bool locked;
+  final VoidCallback onPay;
+
+  @override
+  Widget build(BuildContext context) {
+    final saved = projects.fold<double>(0, (s, p) => s + p.saved);
+    final total = projects.fold<double>(0, (s, p) => s + p.total);
+    final progress = total > 0 ? saved / total : 0.0;
+    return PfFeaturedCard(
+      height: 200,
+      badge: 'SOLDE ÉPARGNÉ',
+      title: formatFcfaLong(balance),
+      titleWidget: FittedBox(
+        alignment: Alignment.centerLeft,
+        fit: BoxFit.scaleDown,
+        child: PfAnimatedAmount(value: balance, format: formatFcfaLong, style: Pf.amount(color: Colors.white, size: 30)),
       ),
+      subtitle: projects.isEmpty
+          ? 'Aucun projet en cours'
+          : '${projects.length} projet${projects.length > 1 ? 's' : ''} · objectif ${formatFcfa(total)}',
+      cta: locked ? 'Activation en attente' : 'Cotiser maintenant',
+      onCta: onPay,
+      trailing: projects.isEmpty
+          ? null
+          : PfRing(
+              value: progress,
+              size: 96,
+              stroke: 9,
+              track: Colors.white.withValues(alpha: 0.12),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('${(progress * 100).round()}%', style: Pf.num(size: 20, color: Colors.white)),
+                  Text('atteint', style: Pf.body(size: 10, color: Colors.white60)),
+                ],
+              ),
+            ),
     );
   }
 }
@@ -807,39 +689,46 @@ class ProjectCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 155,
-      margin: const EdgeInsets.only(right: 14),
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 12, offset: const Offset(0, 6))],
-        border: Border.all(color: color.withOpacity(0.12)),
-      ),
+      width: 176,
+      margin: const EdgeInsets.only(right: Pf.s12, bottom: Pf.s16),
+      padding: const EdgeInsets.all(Pf.s16),
+      decoration: BoxDecoration(color: Pf.surface, borderRadius: Pf.br(Pf.rXl), boxShadow: Pf.shadowSoft),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Stack(
-            alignment: Alignment.center,
+          Row(
             children: [
-              SizedBox(
-                width: 46, height: 46,
-                child: CircularProgressIndicator(
-                  value: progress, strokeWidth: 5,
-                  color: color, backgroundColor: color.withOpacity(0.1),
-                  strokeCap: StrokeCap.round,
-                ),
+              PfRing(
+                value: progress,
+                size: 48,
+                stroke: 5,
+                color: color,
+                child: Text('${(progress * 100).toInt()}%', style: Pf.num(size: 11)),
               ),
-              Text('${(progress * 100).toInt()}%',
-                style: GoogleFonts.manrope(fontWeight: FontWeight.bold, fontSize: 11, color: color)),
+              const Spacer(),
+              Container(
+                width: 32,
+                height: 32,
+                decoration: const BoxDecoration(color: Pf.fill, shape: BoxShape.circle),
+                child: const Icon(Icons.arrow_outward_rounded, size: 16, color: Pf.ink),
+              ),
             ],
           ),
           const Spacer(),
-          Text(title, maxLines: 2, overflow: TextOverflow.ellipsis,
-            style: GoogleFonts.manrope(fontWeight: FontWeight.w900, fontSize: 13, color: AppColors.secondary)),
-          const SizedBox(height: 4),
-          Text('$saved / $total FCFA',
-            style: GoogleFonts.inter(color: Colors.grey, fontSize: 10)),
+          Text(title, maxLines: 2, overflow: TextOverflow.ellipsis, style: Pf.label(size: 14)),
+          const SizedBox(height: Pf.s4),
+          Text.rich(
+            TextSpan(children: [
+              TextSpan(text: saved, style: Pf.num(size: 12)),
+              TextSpan(text: ' / $total FCFA', style: Pf.body(size: 11)),
+            ]),
+            maxLines: 1,
+          ),
+          const SizedBox(height: Pf.s8),
+          ClipRRect(
+            borderRadius: Pf.br(4),
+            child: LinearProgressIndicator(value: progress.clamp(0, 1), minHeight: 4, color: color, backgroundColor: Pf.fill),
+          ),
         ],
       ),
     );
@@ -852,88 +741,46 @@ class TransactionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color statusColor = transaction.status == 'validated'
-        ? const Color(0xFF38A169) // Green Success
-        : (transaction.status == 'rejected' ? Colors.redAccent : Colors.orangeAccent);
-
-    final String statusLabel = transaction.status == 'validated'
-        ? 'VALIDÉ'
-        : (transaction.status == 'rejected' ? 'REJETÉ' : 'EN ATTENTE');
-
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4))],
-      ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(color: statusColor.withOpacity(0.1), shape: BoxShape.circle),
-          child: Icon(Icons.receipt_long_rounded, color: statusColor, size: 20),
-        ),
-        title: Text(transaction.title,
-          style: GoogleFonts.manrope(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.secondary)),
-        subtitle: Text('${transaction.date} • Cotisation',
-          style: GoogleFonts.inter(fontSize: 11, color: Colors.grey)),
-        trailing: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.end,
+    final (tone, statusLabel, color) = switch (transaction.status) {
+      'validated' => (PfChipTone.success, 'VALIDÉ', Pf.success),
+      'rejected' => (PfChipTone.danger, 'REJETÉ', Pf.danger),
+      _ => (PfChipTone.warn, 'EN ATTENTE', const Color(0xFFD97706)),
+    };
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: Pf.gutter, vertical: 6),
+      child: PfCard(
+        padding: const EdgeInsets.symmetric(horizontal: Pf.s16, vertical: Pf.s12),
+        child: Row(
           children: [
-            Text(
-              '+${formatFcfaLong(transaction.amount)}',
-              style: GoogleFonts.manrope(color: statusColor, fontWeight: FontWeight.w900, fontSize: 14),
-            ),
             Container(
-              margin: const EdgeInsets.only(top: 3),
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(color: statusColor.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
-              child: Text(
-                statusLabel,
-                style: TextStyle(color: statusColor, fontSize: 8, fontWeight: FontWeight.bold),
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(color: color.withValues(alpha: 0.10), borderRadius: Pf.br(Pf.rSm)),
+              child: Icon(Icons.south_west_rounded, color: color, size: 20),
+            ),
+            const SizedBox(width: Pf.s12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(transaction.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: Pf.label()),
+                  const SizedBox(height: 2),
+                  Text('${transaction.date} · Cotisation', style: Pf.body(size: 12)),
+                ],
               ),
+            ),
+            const SizedBox(width: Pf.s8),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text('+${formatFcfaLong(transaction.amount)}', style: Pf.num(size: 14)),
+                const SizedBox(height: Pf.s4),
+                PfPillChip(label: statusLabel, tone: tone),
+              ],
             ),
           ],
         ),
       ),
     );
-  }
-}
-
-class PremiumBottomNav extends StatelessWidget {
-  const PremiumBottomNav({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 90,
-      padding: const EdgeInsets.symmetric(horizontal: 40),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 20, offset: const Offset(0, -10))],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          _navItem(Icons.home_filled, true),
-          _navItem(Icons.grid_view_rounded, false),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
-            child: const Icon(Icons.add, color: Colors.white),
-          ),
-          _navItem(Icons.history_rounded, false),
-          _navItem(Icons.person_outline_rounded, false),
-        ],
-      ),
-    );
-  }
-
-  Widget _navItem(IconData icon, bool isActive) {
-    return Icon(icon,
-      color: isActive ? AppColors.primary : AppColors.onSurfaceVariant.withOpacity(0.5), size: 28);
   }
 }

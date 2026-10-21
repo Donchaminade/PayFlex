@@ -1,12 +1,50 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import 'app_typography.dart';
+import '../design/pf_motion.dart';
+
+const _pfTransitions = PageTransitionsTheme(builders: {
+  TargetPlatform.android: PfPageTransitionsBuilder(),
+  TargetPlatform.iOS: PfPageTransitionsBuilder(),
+  TargetPlatform.linux: PfPageTransitionsBuilder(),
+  TargetPlatform.macOS: PfPageTransitionsBuilder(),
+  TargetPlatform.windows: PfPageTransitionsBuilder(),
+  TargetPlatform.fuchsia: PfPageTransitionsBuilder(),
+});
 
 class AppTheme {
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
-      scaffoldBackgroundColor: AppColors.background,
+      scaffoldBackgroundColor: const Color(0xFFF8FAFC),
+      pageTransitionsTheme: _pfTransitions,
+      splashFactory: InkSparkle.splashFactory,
+      snackBarTheme: SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: AppColors.secondary,
+        contentTextStyle: AppTypography.inter(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      ),
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        showDragHandle: true,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+      ),
+      chipTheme: ChipThemeData(
+        shape: const StadiumBorder(),
+        side: BorderSide.none,
+        backgroundColor: const Color(0xFFEEF2F6),
+        selectedColor: AppColors.primary,
+        checkmarkColor: AppColors.secondary,
+        showCheckmark: false,
+        labelStyle: AppTypography.manrope(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.secondary),
+      ),
       colorScheme: ColorScheme.fromSeed(
         seedColor: AppColors.primary,
         primary: AppColors.primary,
@@ -22,11 +60,11 @@ class AppTheme {
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
           foregroundColor: AppColors.secondary,
-          minimumSize: const Size(double.infinity, 60),
+          minimumSize: const Size(double.infinity, 56),
           elevation: 0,
-          textStyle: const TextStyle(
-            fontWeight: FontWeight.w900,
-            letterSpacing: 1.5,
+          textStyle: AppTypography.manrope(
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0.2,
             fontSize: 16,
           ),
           shape: RoundedRectangleBorder(
@@ -36,16 +74,16 @@ class AppTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: Colors.white,
+        fillColor: const Color(0xFFEEF2F6),
         labelStyle: AppTypography.inter(color: AppColors.onSurfaceVariant, fontSize: 14),
         hintStyle: AppTypography.inter(color: const Color(0xFF94A3B8), fontSize: 14),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.35)),
+          borderRadius: BorderRadius.circular(20),
+          borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.35)),
+          borderRadius: BorderRadius.circular(20),
+          borderSide: BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
@@ -65,12 +103,14 @@ class AppTheme {
         style: FilledButton.styleFrom(
           backgroundColor: AppColors.secondary,
           foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          minimumSize: const Size(48, 48),
+          shape: const StadiumBorder(),
         ),
       ),
       cardTheme: CardThemeData(
         color: AppColors.surface,
-        elevation: 8,
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
         shadowColor: Colors.black.withOpacity(0.05),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24),
@@ -78,13 +118,16 @@ class AppTheme {
       ),
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
-        centerTitle: true,
+        scrolledUnderElevation: 0,
+        centerTitle: false,
+        foregroundColor: AppColors.secondary,
         titleTextStyle: TextStyle(
           color: AppColors.secondary,
-          fontWeight: FontWeight.w900,
-          fontSize: 18,
-          letterSpacing: 2,
+          fontWeight: FontWeight.w800,
+          fontSize: 20,
+          letterSpacing: -0.4,
         ),
       ),
     );
@@ -94,6 +137,7 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
+      pageTransitionsTheme: _pfTransitions,
       scaffoldBackgroundColor: AppColors.darkBackground,
       colorScheme: const ColorScheme.dark(
         primary: AppColors.primary,
@@ -110,11 +154,11 @@ class AppTheme {
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
           foregroundColor: AppColors.secondary,
-          minimumSize: const Size(double.infinity, 60),
+          minimumSize: const Size(double.infinity, 56),
           elevation: 0,
-          textStyle: const TextStyle(
-            fontWeight: FontWeight.w900,
-            letterSpacing: 1.5,
+          textStyle: AppTypography.manrope(
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0.2,
             fontSize: 16,
           ),
           shape: RoundedRectangleBorder(

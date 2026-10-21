@@ -1,8 +1,6 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../core/constants/app_colors.dart';
-import '../core/theme/app_typography.dart';
+import '../core/design/pf_components.dart';
 import '../core/providers/auth_provider.dart';
 import '../core/providers/client_inbox_provider.dart';
 import '../core/providers/finance_provider.dart';
@@ -67,7 +65,14 @@ class MainNavigationScreen extends ConsumerWidget {
       extendBody: true,
       body: Stack(
         children: [
-          _ClientTabPage(index: currentIndex, pendingApproval: pendingApproval),
+          AnimatedSwitcher(
+            duration: PfMotion.reduced(context) ? Duration.zero : const Duration(milliseconds: 260),
+            switchInCurve: PfMotion.ease,
+            child: KeyedSubtree(
+              key: ValueKey(currentIndex),
+              child: _ClientTabPage(index: currentIndex, pendingApproval: pendingApproval),
+            ),
+          ),
           if (pendingApproval)
             Positioned(
               top: topInset + 56,
@@ -134,158 +139,30 @@ class _FloatingNavbar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Container(
-      height: 78,
-      margin: const EdgeInsets.only(left: 20, right: 20, bottom: 18),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.92),
-        borderRadius: BorderRadius.circular(28),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.09),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
-          ),
-        ],
-        border: Border.all(color: Colors.white.withOpacity(0.6), width: 1.2),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(28),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: Row(
-              children: [
-                _navItem(context, ref, 0, Icons.home_rounded, 'Accueil'),
-                _navItem(context, ref, 1, Icons.grid_view_rounded, 'Catalogue'),
-                _payButton(context, ref),
-                _navItem(context, ref, 3, Icons.calendar_today_rounded, 'Suivi'),
-                _navItem(context, ref, 4, Icons.history_rounded, 'Historique'),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _payButton(BuildContext context, WidgetRef ref) {
-    final isActive = currentIndex == 2;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () {
-          if (lockPaidFeatures) {
-            showRegistrationFeatureLockedSnackBar(context, 'Paiement');
-            return;
-          }
-          ref.read(navigationIndexProvider.notifier).setIndex(2);
-        },
-        behavior: HitTestBehavior.opaque,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 250),
-              width: 46,
-              height: 46,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: isActive
-                      ? [AppColors.primary, AppColors.secondary]
-                      : [AppColors.primary, AppColors.primary.withOpacity(0.85)],
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primary.withOpacity(0.35),
-                    blurRadius: 14,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
-              ),
-              child: Icon(
-                Icons.account_balance_wallet_rounded,
-                color: isActive ? Colors.white : AppColors.secondary,
-                size: 22,
-              ),
-            ),
-            const SizedBox(height: 3),
-            _navLabel('Payer', isActive),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _navLabel(String label, bool isActive) {
-    return FittedBox(
-      fit: BoxFit.scaleDown,
-      child: Text(
-        label,
-        maxLines: 1,
-        style: AppTypography.manrope(
-          fontSize: 11,
-          fontWeight: isActive ? FontWeight.w800 : FontWeight.w600,
-          color: isActive ? AppColors.primary : AppColors.secondary.withOpacity(0.5),
-        ),
-      ),
-    );
-  }
-
-  Widget _navItem(BuildContext context, WidgetRef ref, int index, IconData icon, String label) {
-    final isActive = currentIndex == index;
-    final auth = ref.watch(authProvider);
-    final pending = auth.awaitingAdminApproval;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () {
-          if (lockPaidFeatures && (index == 3 || index == 4)) {
-            showRegistrationFeatureLockedSnackBar(context, index == 3 ? 'Suivi' : 'Historique');
-            return;
-          }
-          if (index == 4 && !lockPaidFeatures) {
-            ref.read(financeProvider.notifier).reload();
-          }
-          ref.read(navigationIndexProvider.notifier).setIndex(index);
-        },
-        behavior: HitTestBehavior.opaque,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Icon(
-                  icon,
-                  color: isActive ? AppColors.primary : AppColors.secondary.withOpacity(0.3),
-                  size: isActive ? 25 : 23,
-                ),
-                if (index == 4 && pending)
-                  Positioned(
-                    right: -4,
-                    top: -4,
-                    child: Container(
-                      width: 10,
-                      height: 10,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFDD6B20),
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 1.5),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 3),
-            _navLabel(label, isActive),
-          ],
-        ),
-      ),
+    final pending = ref.watch(authProvider).awaitingAdminApproval;
+    return PfFloatingTabBar(
+      index: currentIndex,
+      items: [
+        const PfNavItem(icon: Icons.home_outlined, activeIcon: Icons.home_rounded, label: 'Accueil'),
+        const PfNavItem(icon: Icons.grid_view_outlined, activeIcon: Icons.grid_view_rounded, label: 'Catalogue'),
+        const PfNavItem(icon: Icons.account_balance_wallet_outlined, activeIcon: Icons.account_balance_wallet_rounded, label: 'Payer'),
+        const PfNavItem(icon: Icons.calendar_today_outlined, activeIcon: Icons.calendar_month_rounded, label: 'Suivi'),
+        PfNavItem(icon: Icons.history_rounded, activeIcon: Icons.history_rounded, label: 'Historique', badge: pending),
+      ],
+      onTap: (index) {
+        if (lockPaidFeatures && index == 2) {
+          showRegistrationFeatureLockedSnackBar(context, 'Paiement');
+          return;
+        }
+        if (lockPaidFeatures && (index == 3 || index == 4)) {
+          showRegistrationFeatureLockedSnackBar(context, index == 3 ? 'Suivi' : 'Historique');
+          return;
+        }
+        if (index == 4 && !lockPaidFeatures) {
+          ref.read(financeProvider.notifier).reload();
+        }
+        ref.read(navigationIndexProvider.notifier).setIndex(index);
+      },
     );
   }
 }

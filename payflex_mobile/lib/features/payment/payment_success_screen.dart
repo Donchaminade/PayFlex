@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/design/pf_components.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../core/constants/app_colors.dart';
@@ -63,7 +64,7 @@ class PaymentSuccessScreen extends StatelessWidget {
     return PopScope(
       canPop: false,
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: Pf.canvas,
         body: SafeArea(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
@@ -71,12 +72,25 @@ class PaymentSuccessScreen extends StatelessWidget {
               children: [
                 const Spacer(),
                 // Grande coche visuelle
-                Container(
-                  width: 140,
-                  height: 140,
-                  decoration: BoxDecoration(color: bg, shape: BoxShape.circle),
-                  child: Icon(icon, color: accent, size: 88),
-                ).animate().scale(duration: 500.ms, curve: Curves.easeOutBack),
+                // Anneau qui se remplit → coche (spec écran de paiement)
+                PfRing(
+                  value: 1,
+                  size: 148,
+                  stroke: 8,
+                  color: accent,
+                  track: bg,
+                  child: PfReveal(
+                    delay: const Duration(milliseconds: 650),
+                    scale: true,
+                    dy: 0,
+                    child: Container(
+                      width: 104,
+                      height: 104,
+                      decoration: BoxDecoration(color: bg, shape: BoxShape.circle),
+                      child: Icon(icon, color: accent, size: 64),
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 28),
                 Text(
                   title,
@@ -92,13 +106,8 @@ class PaymentSuccessScreen extends StatelessWidget {
                 Text(
                   formatFcfa(amount),
                   textAlign: TextAlign.center,
-                  style: AppTypography.manrope(
-                    fontWeight: FontWeight.w900,
-                    fontSize: 46,
-                    color: accent,
-                    height: 1.0,
-                  ),
-                ).animate().fadeIn(delay: 150.ms),
+                  style: Pf.amount(size: 46, color: AppColors.secondary),
+                ).animate().fadeIn(delay: 450.ms, duration: 500.ms).slideY(begin: 0.2, curve: Curves.easeOut),
                 const SizedBox(height: 8),
                 if (!split && productName != null && productName!.trim().isNotEmpty) ...[
                   Text(
@@ -146,13 +155,13 @@ class PaymentSuccessScreen extends StatelessWidget {
                 // Un seul gros bouton principal
                 SizedBox(
                   width: double.infinity,
-                  height: 64,
+                  height: 60,
                   child: ElevatedButton(
                     onPressed: onDone,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: accent,
+                      backgroundColor: AppColors.secondary,
                       foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                      shape: const StadiumBorder(),
                     ),
                     child: Text(
                       'OK',

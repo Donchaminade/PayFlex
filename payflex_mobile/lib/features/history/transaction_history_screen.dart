@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/design/pf_components.dart';
 import '../../core/models/allocation_result.dart';
+import '../../core/utils/money_format.dart';
 import '../../core/network/mobile_api_service.dart';
 import '../../core/providers/auth_provider.dart';
 import '../../core/providers/finance_provider.dart';
@@ -31,17 +33,25 @@ class _TransactionHistoryScreenState extends ConsumerState<TransactionHistoryScr
     final total = filtered.fold<double>(0, (s, t) => s + t.amount);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: Pf.canvas,
       appBar: AppBar(
-        title: Text('Historique', style: GoogleFonts.manrope(fontWeight: FontWeight.w800)),
-        backgroundColor: Colors.white,
-        foregroundColor: AppColors.secondary,
         automaticallyImplyLeading: false,
+        toolbarHeight: 96,
+        titleSpacing: Pf.gutter,
+        backgroundColor: Pf.canvas,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Toutes vos cotisations', style: Pf.body(size: 13, w: FontWeight.w600)),
+            const SizedBox(height: Pf.s4),
+            Text('Historique', style: Pf.display()),
+          ],
+        ),
       ),
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            padding: const EdgeInsets.fromLTRB(Pf.gutter, 0, Pf.gutter, 0),
             child: Row(
               children: [
                 _chip('Tous', 'all'),
@@ -52,27 +62,37 @@ class _TransactionHistoryScreenState extends ConsumerState<TransactionHistoryScr
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(16),
-            child: Text(
-              '${filtered.length} opération(s) — ${total.toInt()} FCFA',
-              style: GoogleFonts.inter(color: Colors.grey.shade700),
+            padding: const EdgeInsets.fromLTRB(Pf.gutter, Pf.s16, Pf.gutter, Pf.s12),
+            child: Row(
+              children: [
+                Text('${filtered.length} opération(s)', style: Pf.body()),
+                const Spacer(),
+                Text(formatFcfaLong(total), style: Pf.num(size: 15)),
+              ],
             ),
           ),
           Expanded(
             child: filtered.isEmpty
-                ? Center(child: Text('Aucune cotisation', style: GoogleFonts.manrope(color: Colors.grey)))
+                ? const Center(child: PfEmptyState(icon: Icons.receipt_long_rounded, title: 'Aucune cotisation', message: 'Vos paiements apparaîtront ici dès leur enregistrement.'))
                 : ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    padding: const EdgeInsets.fromLTRB(Pf.gutter, 0, Pf.gutter, 120),
                     itemCount: filtered.length,
                     itemBuilder: (context, i) {
                       final t = filtered[i];
                       final isAllocated = t.allocationGroupId != null;
-                      return Card(
-                        margin: const EdgeInsets.only(bottom: 10),
+                      return PfReveal(index: i, child: Card(
+                        margin: const EdgeInsets.only(bottom: Pf.s12),
                         child: ListTile(
+                          contentPadding: const EdgeInsets.symmetric(horizontal: Pf.s16, vertical: Pf.s4),
+                          leading: Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(color: Pf.gold.withValues(alpha: 0.14), borderRadius: Pf.br(Pf.rSm)),
+                            child: const Icon(Icons.south_west_rounded, color: Pf.ink, size: 20),
+                          ),
                           title: Row(
                             children: [
-                              Text('${t.amount.toInt()} FCFA', style: GoogleFonts.manrope(fontWeight: FontWeight.w800)),
+                              Text(formatFcfaLong(t.amount), style: Pf.num(size: 15)),
                               if (isAllocated) ...[
                                 const SizedBox(width: 8),
                                 Container(
@@ -114,7 +134,7 @@ class _TransactionHistoryScreenState extends ConsumerState<TransactionHistoryScr
                                   ),
                                 ),
                         ),
-                      );
+                      ));
                     },
                   ),
           ),

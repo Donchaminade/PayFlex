@@ -4,6 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/design/pf_components.dart';
 import '../../core/providers/auth_provider.dart';
 import '../../core/providers/finance_provider.dart';
 import '../../core/utils/money_format.dart';
@@ -350,18 +351,17 @@ class _CalendarViewScreenState extends ConsumerState<CalendarViewScreen> {
             )
           : null,
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
         automaticallyImplyLeading: false,
-        centerTitle: true,
-        title: Text(
-          'SUIVI DES COTISATIONS',
-          style: GoogleFonts.manrope(
-            fontWeight: FontWeight.w900,
-            letterSpacing: 2,
-            fontSize: 14,
-            color: AppColors.secondary,
-          ),
+        toolbarHeight: 96,
+        titleSpacing: Pf.gutter,
+        backgroundColor: Pf.canvas,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Suivi des cotisations', style: Pf.body(size: 13, w: FontWeight.w600)),
+            const SizedBox(height: Pf.s4),
+            Text('Mon carnet', style: Pf.display()),
+          ],
         ),
       ),
       body: Stack(
