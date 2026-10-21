@@ -527,9 +527,10 @@ class PfSecuritySteps extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         for (var i = 0; i < 3; i++) ...[
-          _dot(i + 1 <= step, failed && i + 1 == step + 1, i + 1 == step + 1 && step > 0 && !failed, labels[i]),
+          Flexible(flex: 2, child: _dot(i + 1 <= step, failed && i + 1 == step + 1, i + 1 == step + 1 && step > 0 && !failed, labels[i])),
           if (i < 2)
             Expanded(
+              flex: 1,
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 400),
                 height: 2,
@@ -566,7 +567,7 @@ class PfSecuritySteps extends StatelessWidget {
           child: done ? const Icon(Icons.check_rounded, size: 13, color: Colors.white) : null,
         ),
         const SizedBox(height: 6),
-        Text(label, style: Pf.body(size: 10.5, color: col == Pf.faint ? Pf.muted : col, w: FontWeight.w700)),
+        FittedBox(fit: BoxFit.scaleDown, child: Text(label, maxLines: 1, style: Pf.body(size: 10.5, color: col == Pf.faint ? Pf.muted : col, w: FontWeight.w700))),
       ],
     );
   }
